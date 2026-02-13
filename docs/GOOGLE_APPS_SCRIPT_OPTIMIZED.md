@@ -110,18 +110,67 @@ function getOrCreateSheet(ss, sheetName) {
   return sheet;
 }
 
-// Sort sheet berdasarkan Waktu Scan (tanggal) dulu, lalu No
+// Parse waktu scan ke timestamp untuk sorting
+function parseWaktuScan(value) {
+  if (!value) return 0;
+  
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  
+  const text = value.toString();
+  
+  // Format ISO: "YYYY-MM-DD HH:MM:SS"
+  if (text.match(/^\d{4}-\d{2}-\d{2}/)) {
+    return new Date(text.replace(' ', 'T')).getTime() || 0;
+  }
+  
+  // Format: "D/M/YYYY, HH.MM.SS" atau "D/M/YYYY"
+  const slashMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:,?\s*(\d{2})\.(\d{2})(?:\.(\d{2}))?)?/);
+  if (slashMatch) {
+    const day = parseInt(slashMatch[1]);
+    const month = parseInt(slashMatch[2]) - 1;
+    const year = parseInt(slashMatch[3]);
+    const hours = parseInt(slashMatch[4]) || 0;
+    const minutes = parseInt(slashMatch[5]) || 0;
+    const seconds = parseInt(slashMatch[6]) || 0;
+    return new Date(year, month, day, hours, minutes, seconds).getTime();
+  }
+  
+  return 0;
+}
+
+// Sort sheet berdasarkan Waktu Scan (tanggal) dulu, lalu No - dengan custom sort
 function sortSheetByNumber(sheet) {
   const lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return; // Tidak ada data selain header
+  if (lastRow <= 1) return;
   
-  // Sort range data (skip header row 1)
-  // Sort by Waktu Scan (kolom 3) dulu, lalu by No (kolom 1)
+  // Baca semua data
   const dataRange = sheet.getRange(2, 1, lastRow - 1, 4);
-  dataRange.sort([
-    { column: 3, ascending: true },  // Waktu Scan
-    { column: 1, ascending: true }   // No
-  ]);
+  const data = dataRange.getValues();
+  
+  // Sort: by date (parsed), then by No
+  data.sort((a, b) => {
+    // Parse waktu scan
+    const timeA = parseWaktuScan(a[2]);
+    const timeB = parseWaktuScan(b[2]);
+    
+    // Get date only (tanpa waktu) untuk grouping per hari
+    const dateA = Math.floor(timeA / 86400000);
+    const dateB = Math.floor(timeB / 86400000);
+    
+    if (dateA !== dateB) {
+      return dateA - dateB; // Sort by tanggal
+    }
+    
+    // Sama tanggal, sort by No
+    const noA = parseInt(a[0]) || 0;
+    const noB = parseInt(b[0]) || 0;
+    return noA - noB;
+  });
+  
+  // Tulis kembali
+  dataRange.setValues(data);
 }
 
 // Handle POST request - OPTIMIZED dengan batch writing + auto-sort
