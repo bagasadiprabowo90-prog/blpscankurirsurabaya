@@ -39,6 +39,16 @@ function formatTime(timestamp: number): string {
   });
 }
 
+// Mapping kategori aplikasi ke nama sheet di Google Sheets
+const CATEGORY_TO_SHEET_NAME: Record<CourierCategory, string> = {
+  'shopee': 'SHOPEE',
+  'jnt': 'J&T',
+  'goto': 'GOTO',
+  'jne': 'JNE',
+  'instan-sameday': 'INSTAN',
+  'spare': 'LAINNYA',
+};
+
 // Prepare data untuk dikirim ke Google Sheets
 // IMPORTANT: hanya kirim kategori yang memiliki data, supaya Apps Script tidak membuat sheet baru untuk kategori kosong
 // IMPORTANT: rowNumber adalah nomor urut dari database aplikasi, harus digunakan di Google Sheets
@@ -46,8 +56,8 @@ function formatTime(timestamp: number): string {
 function prepareDataForSync(
   records: ResiRecord[],
   options?: { force?: boolean }
-): Partial<Record<CourierCategory, any[]>> {
-  const result: Partial<Record<CourierCategory, any[]>> = {};
+): Record<string, any[]> {
+  const result: Record<string, any[]> = {};
 
   // Filter records yang perlu di-sync
   const recordsToProcess = options?.force 
@@ -64,10 +74,11 @@ function prepareDataForSync(
   });
 
   for (const record of sortedRecords) {
-    const key = record.category;
-    if (!result[key]) result[key] = [];
+    // Map ke nama sheet yang benar
+    const sheetName = CATEGORY_TO_SHEET_NAME[record.category] || 'LAINNYA';
+    if (!result[sheetName]) result[sheetName] = [];
 
-    result[key]!.push({
+    result[sheetName]!.push({
       // Nomor urut dari aplikasi - ini yang harus dipakai di Google Sheets
       no: record.rowNumber,
       rowNumber: record.rowNumber,
