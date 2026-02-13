@@ -21,22 +21,17 @@ export interface LastNumbersResult {
   error?: string;
 }
 
-// Format tanggal untuk Google Sheets
-function formatDate(timestamp: number): string {
+// Format tanggal untuk Google Sheets - ISO format untuk sorting yang benar
+// Format: YYYY-MM-DD HH:MM:SS (sortable sebagai text)
+function formatDateTime(timestamp: number): string {
   const date = new Date(timestamp);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = months[date.getMonth()];
   const year = date.getFullYear();
-  return `${day} ${month} ${year}`;
-}
-
-function formatTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 // Mapping kategori aplikasi ke nama sheet di Google Sheets
@@ -84,9 +79,9 @@ function prepareDataForSync(
       rowNumber: record.rowNumber,
       nomorUrut: record.rowNumber,
       resi: record.resi,
-      // Kirim dua nama field supaya kompatibel dengan beberapa versi Apps Script
-      waktuscan: `${formatDate(record.timestamp)} ${formatTime(record.timestamp)}`,
-      tanggalWaktu: `${formatDate(record.timestamp)} ${formatTime(record.timestamp)}`,
+      // Format ISO (YYYY-MM-DD HH:MM:SS) untuk sorting yang benar
+      waktuscan: formatDateTime(record.timestamp),
+      tanggalWaktu: formatDateTime(record.timestamp),
       status: record.isDuplicate ? 'DUPLIKAT' : 'OK',
     });
   }
@@ -134,8 +129,8 @@ async function syncBatch(
   const payload = {
     records: dataToSync,
     timestamp: new Date().toISOString(),
-    // Flag untuk trigger sorting di server (hanya batch terakhir)
-    triggerSort: options?.triggerSort || false
+    // Selalu trigger sorting di server setiap sync
+    triggerSort: true
   };
   
   console.log('[Sync] Sending batch:', {

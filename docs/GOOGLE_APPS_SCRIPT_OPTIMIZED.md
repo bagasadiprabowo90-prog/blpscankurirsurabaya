@@ -30,23 +30,8 @@ let sheetsCache = {};
 // Daftar tab kurir yang diizinkan (sesuaikan dengan aplikasi)
 const ALLOWED_CATEGORIES = new Set(['SHOPEE', 'J&T', 'GOTO', 'JNE', 'INSTAN', 'LAINNYA']);
 
-// Mapping bulan (format Indonesia) ke angka
-const MONTH_MAP = {
-  Jan: '01',
-  Feb: '02',
-  Mar: '03',
-  Apr: '04',
-  Mei: '05',
-  Jun: '06',
-  Jul: '07',
-  Agu: '08',
-  Sep: '09',
-  Okt: '10',
-  Nov: '11',
-  Des: '12'
-};
-
 // Ambil date key (YYYY-MM-DD) dari nilai Waktu Scan
+// Format yang diterima: "YYYY-MM-DD HH:MM:SS" (ISO format dari aplikasi)
 function getDateKeyFromScanTime(value) {
   if (!value) return '';
 
@@ -55,15 +40,26 @@ function getDateKeyFromScanTime(value) {
   }
 
   const text = value.toString();
+  
+  // Format ISO: "YYYY-MM-DD HH:MM:SS" - ambil 10 karakter pertama
+  if (text.match(/^\d{4}-\d{2}-\d{2}/)) {
+    return text.substring(0, 10);
+  }
+  
+  // Fallback: format lama "DD MMM YYYY" (untuk data existing)
+  const MONTH_MAP = {
+    Jan: '01', Feb: '02', Mar: '03', Apr: '04', Mei: '05', Jun: '06',
+    Jul: '07', Agu: '08', Sep: '09', Okt: '10', Nov: '11', Des: '12'
+  };
   const parts = text.split(' ');
-  if (parts.length < 3) return '';
-
-  const day = parts[0].padStart(2, '0');
-  const month = MONTH_MAP[parts[1]];
-  const year = parts[2];
-  if (!month) return '';
-
-  return `${year}-${month}-${day}`;
+  if (parts.length >= 3) {
+    const day = parts[0].padStart(2, '0');
+    const month = MONTH_MAP[parts[1]];
+    const year = parts[2];
+    if (month) return `${year}-${month}-${day}`;
+  }
+  
+  return '';
 }
 
 // Ambil nomor terakhir per tanggal (untuk reset harian di sheet)
@@ -104,14 +100,18 @@ function getOrCreateSheet(ss, sheetName) {
   return sheet;
 }
 
-// Sort sheet berdasarkan kolom No (kolom A)
+// Sort sheet berdasarkan Waktu Scan (tanggal) dulu, lalu No
 function sortSheetByNumber(sheet) {
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return; // Tidak ada data selain header
   
   // Sort range data (skip header row 1)
+  // Sort by Waktu Scan (kolom 3) dulu, lalu by No (kolom 1)
   const dataRange = sheet.getRange(2, 1, lastRow - 1, 4);
-  dataRange.sort({ column: 1, ascending: true });
+  dataRange.sort([
+    { column: 3, ascending: true },  // Waktu Scan
+    { column: 1, ascending: true }   // No
+  ]);
 }
 
 // Handle POST request - OPTIMIZED dengan batch writing + auto-sort
@@ -125,7 +125,6 @@ function doPost(e) {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const data = JSON.parse(e.postData.contents);
     const records = data.records;
-    const shouldSort = data.triggerSort === true; // Flag untuk trigger sorting
     
     let totalAdded = 0;
     const processedSheets = []; // Track sheets yang perlu di-sort
@@ -175,11 +174,9 @@ function doPost(e) {
       }
     }
     
-    // AUTO-SORT jika diminta
-    if (shouldSort) {
-      for (const sheet of processedSheets) {
-        sortSheetByNumber(sheet);
-      }
+    // SELALU AUTO-SORT setelah menambah data
+    for (const sheet of processedSheets) {
+      sortSheetByNumber(sheet);
     }
     
     // Flush perubahan
@@ -190,9 +187,9 @@ function doPost(e) {
     
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      message: `${totalAdded} records added${shouldSort ? ' and sorted' : ''}`,
+      message: `${totalAdded} records added and sorted`,
       count: totalAdded,
-      sorted: shouldSort
+      sorted: true
     })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (error) {
