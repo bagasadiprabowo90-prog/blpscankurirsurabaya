@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Camera scanner animation */
+@keyframes scan-line {
+  0%, 100% {
+    top: 10%;
+    opacity: 1;
+  }
+  50% {
+    top: 80%;
+    opacity: 0.5;
+  }
+}
+
+.animate-scan-line {
+  animation: scan-line 2s ease-in-out infinite;
+}
+
+@layer base {
+  :root {
+    --background: 220 14% 96%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 217 91% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 90%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 14% 92%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 217 91% 95%;
+    --accent-foreground: 217 91% 40%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 13% 88%;
+    --input: 220 13% 88%;
+    --ring: 217 91% 50%;
+
+    --radius: 0.5rem;
+
+    /* Category Colors */
+    --shopee: 16 100% 50%;
+    --jnt: 0 84% 50%;
+    --goto: 142 70% 40%;
+    --jne-zalora: 262 83% 58%;
+    --zalora-sap: 330 80% 50%;
+    --lazada: 217 91% 50%;
+    --ninja: 0 0% 20%;
+    --instan-sameday: 45 93% 47%;
+    --spx-central: 199 89% 48%;
+    --spare: 220 9% 46%;
+
+    /* Scanner specific */
+    --scan-glow: 217 91% 50%;
+    --duplicate-bg: 0 84% 95%;
+    --duplicate-border: 0 84% 60%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 6%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 70% 30%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 40%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 212 27% 84%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .scan-input {
+    @apply font-mono text-lg tracking-wider uppercase;
+  }
+
+  .category-badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .category-shopee {
+    @apply bg-[hsl(16,100%,95%)] text-[hsl(16,100%,40%)] border border-[hsl(16,100%,50%)];
+  }
+
+  .category-jnt {
+    @apply bg-[hsl(0,84%,95%)] text-[hsl(0,84%,40%)] border border-[hsl(0,84%,50%)];
+  }
+
+  .category-goto {
+    @apply bg-[hsl(142,70%,95%)] text-[hsl(142,70%,30%)] border border-[hsl(142,70%,40%)];
+  }
+
+  .category-jne-zalora {
+    @apply bg-[hsl(262,83%,95%)] text-[hsl(262,83%,40%)] border border-[hsl(262,83%,58%)];
+  }
+
+  .category-zalora-sap {
+    @apply bg-[hsl(330,80%,95%)] text-[hsl(330,80%,40%)] border border-[hsl(330,80%,50%)];
+  }
+
+  .category-lazada {
+    @apply bg-[hsl(217,91%,95%)] text-[hsl(217,91%,40%)] border border-[hsl(217,91%,50%)];
+  }
+
+  .category-ninja {
+    @apply bg-[hsl(0,0%,95%)] text-[hsl(0,0%,20%)] border border-[hsl(0,0%,40%)];
+  }
+
+  .category-instan-sameday {
+    @apply bg-[hsl(45,93%,95%)] text-[hsl(45,93%,30%)] border border-[hsl(45,93%,47%)];
+  }
+
+  .category-spx-central {
+    @apply bg-[hsl(199,89%,95%)] text-[hsl(199,89%,35%)] border border-[hsl(199,89%,48%)];
+  }
+
+  .category-spare {
+    @apply bg-muted text-muted-foreground border border-border;
+  }
+
+  .duplicate-row {
+    @apply bg-[hsl(var(--duplicate-bg))] border-l-4 border-l-[hsl(var(--duplicate-border))];
+  }
+
+  .scan-glow {
+    box-shadow: 0 0 0 3px hsl(var(--scan-glow) / 0.2), 0 0 20px hsl(var(--scan-glow) / 0.15);
+  }
+
+  .table-row-enter {
+    animation: rowEnter 0.2s ease-out;
+  }
+
+  @keyframes rowEnter {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-scan {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+    }
+  }
+
+  .pulse-scan {
+    animation: pulse-scan 2s infinite;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+  }
+
+  .shake {
+    animation: shake 0.5s ease-in-out;
+  }
+}
