@@ -35,18 +35,28 @@ const ALLOWED_CATEGORIES = new Set(['SHOPEE', 'J&T', 'GOTO', 'JNE', 'INSTAN', 'L
 function getDateKeyFromScanTime(value) {
   if (!value) return '';
 
+  // Jika Date object, langsung format
   if (value instanceof Date) {
     return Utilities.formatDate(value, 'Asia/Jakarta', 'yyyy-MM-dd');
   }
 
   const text = value.toString();
   
-  // Format ISO: "YYYY-MM-DD HH:MM:SS" - ambil 10 karakter pertama
+  // Format 1: ISO "YYYY-MM-DD HH:MM:SS"
   if (text.match(/^\d{4}-\d{2}-\d{2}/)) {
     return text.substring(0, 10);
   }
   
-  // Fallback: format lama "DD MMM YYYY" (untuk data existing)
+  // Format 2: Google Sheets Indonesia "D/M/YYYY" atau "DD/M/YYYY, HH.MM.SS"
+  const slashMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (slashMatch) {
+    const day = slashMatch[1].padStart(2, '0');
+    const month = slashMatch[2].padStart(2, '0');
+    const year = slashMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+  
+  // Format 3: Indonesia "DD MMM YYYY" (data lama)
   const MONTH_MAP = {
     Jan: '01', Feb: '02', Mar: '03', Apr: '04', Mei: '05', Jun: '06',
     Jul: '07', Agu: '08', Sep: '09', Okt: '10', Nov: '11', Des: '12'
