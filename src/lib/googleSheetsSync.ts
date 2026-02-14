@@ -5,8 +5,8 @@ import { CourierCategory } from './courierCategories';
 // Google Apps Script Web App URL (Optimized Version)
 // PENTING: URL sudah diupdate dengan Web App yang aktif
 // Spreadsheet: Database Scan Resi WH Online Surabaya
-// Last Update: 13 Feb 2026 - v3.5 fix format + custom sort
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwx7oybvVQQSAIAESxBcJb0p7tN7feoQX7Ig7pnlBfinAUOWrQQ9krNCdfrZodEH1-Plg/exec';
+// Last Update: 14 Feb 2026 - v3.6 speed optimized
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxgMEP9ahfEG0OTiMMJ1Y1wUryHLXxZ7gRu6tkOvBHC57FSZJlp4GyiZSOHNn4fDlb3/exec';
 
 export interface SyncResult {
   success: boolean;
