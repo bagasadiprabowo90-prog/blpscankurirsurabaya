@@ -19,7 +19,6 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          'recharts': ['recharts'],
           'vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-dialog': ['@radix-ui/react-dialog', '@radix-ui/react-alert-dialog'],
           'ui-menu': ['@radix-ui/react-popover', '@radix-ui/react-dropdown-menu', '@radix-ui/react-context-menu'],

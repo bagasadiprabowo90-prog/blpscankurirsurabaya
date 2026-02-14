@@ -29,8 +29,7 @@ import { useScanQueue } from '@/hooks/useScanQueue';
 import { useGlobalScanCapture } from '@/hooks/useGlobalScanCapture';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { FlaskConical, BarChart3 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { FlaskConical } from 'lucide-react';
 
 
 const Index = () => {
@@ -409,12 +408,6 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/dashboard">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
-                </Button>
-              </Link>
               <ActionButtons
                 onExportExcel={handleExportExcel}
                 onSyncGoogleSheets={handleSyncGoogleSheets}
