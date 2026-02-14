@@ -110,11 +110,11 @@ export async function getLastNumbersFromSheet(): Promise<LastNumbersResult> {
   }
 }
 
-// Batch size untuk sync (100 record per batch)
-const BATCH_SIZE = 100;
+// Batch size untuk sync (200 record per batch - lebih besar = lebih cepat)
+const BATCH_SIZE = 200;
 
-// Jumlah batch yang dikirim paralel sekaligus (lebih cepat)
-const PARALLEL_BATCHES = 3;
+// Jumlah batch yang dikirim paralel sekaligus
+const PARALLEL_BATCHES = 5;
 
 // Sync satu batch ke Google Sheets
 async function syncBatch(
@@ -129,8 +129,8 @@ async function syncBatch(
   const payload = {
     records: dataToSync,
     timestamp: new Date().toISOString(),
-    // Selalu trigger sorting di server setiap sync
-    triggerSort: true
+    // Hanya sort di batch terakhir untuk kecepatan
+    triggerSort: options?.triggerSort || false
   };
   
   console.log('[Sync] Sending batch:', {

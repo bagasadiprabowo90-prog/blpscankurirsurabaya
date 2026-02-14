@@ -184,6 +184,7 @@ function doPost(e) {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const data = JSON.parse(e.postData.contents);
     const records = data.records;
+    const shouldSort = data.triggerSort === true; // Hanya sort jika diminta
     
     let totalAdded = 0;
     const processedSheets = []; // Track sheets yang perlu di-sort
@@ -233,9 +234,11 @@ function doPost(e) {
       }
     }
     
-    // SELALU AUTO-SORT setelah menambah data
-    for (const sheet of processedSheets) {
-      sortSheetByNumber(sheet);
+    // AUTO-SORT hanya jika diminta (batch terakhir)
+    if (shouldSort) {
+      for (const sheet of processedSheets) {
+        sortSheetByNumber(sheet);
+      }
     }
     
     // Flush perubahan
@@ -246,8 +249,9 @@ function doPost(e) {
     
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      message: `${totalAdded} records added and sorted`,
+      message: `${totalAdded} records added${shouldSort ? ' and sorted' : ''}`,
       count: totalAdded,
+      sorted: shouldSort
       sorted: true
     })).setMimeType(ContentService.MimeType.JSON);
     
