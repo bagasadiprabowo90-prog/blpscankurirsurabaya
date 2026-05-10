@@ -394,20 +394,20 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b shadow-sm">
-        <div className="container max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg border-2 border-primary-foreground/20">
-                <span className="font-black text-lg text-primary-foreground tracking-tight">BLP</span>
+        <div className="container max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg border-2 border-primary-foreground/20 shrink-0">
+                <span className="font-black text-base sm:text-lg text-primary-foreground tracking-tight">BLP</span>
               </div>
-              <div>
-                <h1 className="font-bold text-lg">BLP Scan Kurir Surabaya</h1>
-                <p className="text-xs text-muted-foreground">
+              <div className="min-w-0">
+                <h1 className="font-bold text-sm sm:text-lg truncate">BLP Scan Kurir Surabaya</h1>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   Scan & Kelola Resi
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <ActionButtons
                 onExportExcel={handleExportExcel}
                 onSyncGoogleSheets={handleSyncGoogleSheets}
@@ -485,9 +485,9 @@ const Index = () => {
       })()}
 
       {/* Main Content */}
-      <main className="container max-w-7xl mx-auto px-4 py-4">
+      <main className="container max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
         {/* Category Tabs - Full Width at Top */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <CategoryTabs
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
@@ -495,9 +495,9 @@ const Index = () => {
           />
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-4">
+        <div className="grid lg:grid-cols-12 gap-3 sm:gap-4">
           {/* Left Column - Input & Stats */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-4 space-y-3 sm:space-y-4">
             <ScanInput
               onScan={handleScan}
               onBulkUpload={handleBulkUpload}
@@ -541,8 +541,8 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-card/50 py-4 mt-8">
-        <div className="container max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
+      <footer className="border-t bg-card/50 py-3 sm:py-4 mt-6 sm:mt-8">
+        <div className="container max-w-7xl mx-auto px-3 sm:px-4 text-center text-xs sm:text-sm text-muted-foreground">
           <p>
             Manual Sync ke Google Sheets • Optimized untuk 6.000+ resi/hari • IndexedDB Storage
           </p>

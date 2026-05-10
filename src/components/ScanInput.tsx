@@ -103,26 +103,26 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
       )}
 
       <div 
-        className="bg-card rounded-xl border shadow-sm p-4 md:p-6"
+        className="bg-card rounded-xl border shadow-sm p-4 sm:p-5"
         style={activeCourierInfo ? { borderColor: activeCourierInfo.color, borderWidth: 2 } : {}}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div 
               className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center",
+                "w-11 h-11 rounded-xl flex items-center justify-center",
                 lastResult?.isDuplicate && "bg-destructive/10"
               )}
               style={{ backgroundColor: activeCourierInfo ? `${activeCourierInfo.color}20` : 'hsl(var(--primary) / 0.1)' }}
             >
               {lastResult?.isDuplicate ? (
-                <AlertTriangle className="w-5 h-5 text-destructive" />
+                <AlertTriangle className="w-6 h-6 text-destructive" />
               ) : (
-                <Scan className="w-5 h-5" style={{ color: activeCourierInfo?.color || 'hsl(var(--primary))' }} />
+                <Scan className="w-6 h-6" style={{ color: activeCourierInfo?.color || 'hsl(var(--primary))' }} />
               )}
             </div>
             <div>
-              <h2 className="font-semibold text-lg">
+              <h2 className="font-bold text-lg">
                 {activeCourierInfo ? `Scan ${activeCourierInfo.name}` : 'Scan Resi'}
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -155,7 +155,7 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
               variant="outline"
               size="sm"
               onClick={() => setShowCameraScanner(true)}
-              className="gap-2"
+              className="gap-1.5 h-9"
             >
               <Camera className="w-4 h-4" />
               <span className="hidden sm:inline">Kamera</span>
@@ -164,10 +164,10 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
               variant="outline"
               size="sm"
               onClick={() => setBulkMode(!bulkMode)}
-              className="gap-2"
+              className="gap-1.5 h-9"
             >
               <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">{bulkMode ? 'Mode Tunggal' : 'Bulk Input'}</span>
+              <span className="hidden sm:inline">{bulkMode ? 'Satuan' : 'Bulk'}</span>
             </Button>
           </div>
         </div>
@@ -178,14 +178,15 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
               value={bulkValue}
               onChange={(e) => setBulkValue(e.target.value)}
               placeholder="Paste nomor resi di sini (pisahkan dengan enter, koma, atau titik koma)..."
-              className="w-full h-32 p-3 rounded-lg border bg-background font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full h-36 p-3 rounded-lg border bg-background font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
               disabled={disabled}
             />
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm font-medium text-muted-foreground">
                 {bulkValue.split(/[\n\r,;]+/).filter(l => l.trim()).length} resi terdeteksi
               </span>
-              <Button onClick={handleBulkSubmit} disabled={disabled || !bulkValue.trim()}>
+              <Button onClick={handleBulkSubmit} disabled={disabled || !bulkValue.trim()} className="gap-2">
+                <Upload className="w-4 h-4" />
                 Proses Semua
               </Button>
             </div>
@@ -203,7 +204,7 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
                 onBlur={handleBlur}
                 placeholder={activeCourierInfo ? `Scan resi ${activeCourierInfo.name}...` : 'Scan atau ketik nomor resi...'}
                 className={cn(
-                  "scan-input h-12 pr-12 transition-all",
+                  "scan-input h-14 pr-12 transition-all text-base",
                   "focus:scan-glow focus:ring-2 focus:ring-primary",
                   shake && "shake border-destructive",
                   lastResult?.success && !lastResult.isDuplicate && "border-success"
@@ -214,21 +215,22 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
               />
               <div 
                 className={cn(
-                  "absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full",
+                  "absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full",
                   "flex items-center justify-center transition-colors",
                   value ? "pulse-scan" : ""
                 )}
                 style={{ backgroundColor: value ? (activeCourierInfo?.color || 'hsl(var(--primary))') : 'hsl(var(--muted))' }}
               >
-                <div className="w-2 h-2 rounded-full bg-white" />
+                <div className="w-2.5 h-2.5 rounded-full bg-white" />
               </div>
             </div>
             <Button 
               type="submit" 
               disabled={disabled || !value.trim()} 
-              className="h-12 px-6"
+              className="h-14 px-6 text-base font-semibold gap-2"
               style={activeCourierInfo ? { backgroundColor: activeCourierInfo.color } : {}}
             >
+              <Scan className="w-5 h-5" />
               Scan
             </Button>
           </form>

@@ -22,7 +22,7 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
   const rowVirtualizer = useVirtualizer({
     count: sortedRecords.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 48,
+    estimateSize: () => 56,
     overscan: 20,
   });
 
@@ -41,18 +41,20 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
 
   if (records.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <Package className="w-12 h-12 mb-4 opacity-50" />
-        <p className="text-lg font-medium">Belum ada data</p>
-        <p className="text-sm">Mulai scan resi untuk menampilkan data</p>
+      <div className="bg-card rounded-xl border shadow-sm">
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+          <Package className="w-16 h-16 mb-4 opacity-40" />
+          <p className="text-xl font-semibold">Belum ada data</p>
+          <p className="text-sm mt-1">Mulai scan resi untuk menampilkan data</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-      {/* Header */}
-      <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-muted/50 border-b text-sm font-medium text-muted-foreground">
+      {/* Header - Desktop */}
+      <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-3 bg-muted/50 border-b text-sm font-semibold text-muted-foreground">
         <div className="col-span-1">No</div>
         <div className="col-span-4">Nomor Resi</div>
         {showCategory && <div className="col-span-2">Kategori</div>}
@@ -65,7 +67,7 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
       <div
         ref={parentRef}
         className="overflow-auto"
-        style={{ height: Math.min(500, sortedRecords.length * 48 + 20) }}
+        style={{ height: Math.min(600, sortedRecords.length * 56 + 20) }}
       >
         <div
           style={{
@@ -83,49 +85,87 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
                 key={record.id}
                 data-index={virtualItem.index}
                 className={cn(
-                  "absolute top-0 left-0 w-full grid grid-cols-12 gap-2 px-4 py-3 items-center",
+                  "absolute top-0 left-0 w-full px-4 py-3",
                   "border-b hover:bg-muted/30 transition-colors table-row-enter",
-                  record.isDuplicate && "duplicate-row"
+                  record.isDuplicate && "duplicate-row",
+                  // Desktop: grid layout
+                  "sm:grid sm:grid-cols-12 sm:gap-2 sm:items-center",
+                  // Mobile: card layout
+                  "flex flex-col gap-1.5 sm:flex-none"
                 )}
                 style={{
                   height: `${virtualItem.size}px`,
                   transform: `translateY(${virtualItem.start}px)`,
                 }}
               >
-                <div className="col-span-1 text-sm text-muted-foreground">
+                {/* Mobile Layout */}
+                <div className="flex items-center justify-between sm:hidden">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground font-medium">#{record.rowNumber}</span>
+                    <span className="font-mono text-sm font-semibold truncate max-w-[200px]">{record.resi}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {record.isDuplicate ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-destructive/10 text-destructive">
+                        <AlertTriangle className="w-3 h-3" />
+                        DUPLIKAT
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600">
+                        <CheckCircle className="w-3 h-3" />
+                        OK
+                      </span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => onDelete(record.id)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:hidden">
+                  <Clock className="w-3 h-3" />
+                  {formatDateTime(record.timestamp)}
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden sm:block col-span-1 text-sm text-muted-foreground">
                   {record.rowNumber}
                 </div>
-                <div className="col-span-4 font-mono text-sm font-medium truncate">
+                <div className="hidden sm:block col-span-4 font-mono text-sm font-semibold truncate">
                   {record.resi}
                 </div>
                 {showCategory && (
-                  <div className="col-span-2">
+                  <div className="hidden sm:block col-span-2">
                     <span className={cn("category-badge", category.bgClass)}>
                       {category.shortName}
                     </span>
                   </div>
                 )}
                 <div className={cn(
-                  "flex items-center gap-1.5 text-sm text-muted-foreground",
+                  "hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground",
                   showCategory ? "col-span-2" : "col-span-4"
                 )}>
                   <Clock className="w-3.5 h-3.5" />
                   {formatDateTime(record.timestamp)}
                 </div>
-                <div className="col-span-2">
+                <div className="hidden sm:block col-span-2">
                   {record.isDuplicate ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-destructive/10 text-destructive">
                       <AlertTriangle className="w-3.5 h-3.5" />
                       DUPLIKAT
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600">
                       <CheckCircle className="w-3.5 h-3.5" />
                       OK
                     </span>
                   )}
                 </div>
-                <div className="col-span-1 text-right">
+                <div className="hidden sm:flex col-span-1 justify-end">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -142,7 +182,7 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-2 bg-muted/30 border-t text-sm text-muted-foreground">
+      <div className="px-4 py-2.5 bg-muted/30 border-t text-sm font-medium text-muted-foreground">
         Total: {records.length} resi
       </div>
     </div>
