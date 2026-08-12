@@ -3,7 +3,6 @@ export type CourierCategory =
   | 'jnt'
   | 'goto'
   | 'jne'
-  | 'spx'
   | 'instan-sameday'
   | 'spare';
 
@@ -22,19 +21,10 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
     id: 'shopee',
     name: 'Shopee',
     shortName: 'SHP',
-    prefixes: [],
+    prefixes: ['SPXID'],
     patterns: [],
     color: 'hsl(16, 100%, 50%)',
     bgClass: 'category-shopee',
-  },
-  {
-    id: 'spx',
-    name: 'Shopee Xpress',
-    shortName: 'SPX',
-    prefixes: ['SPXID'],
-    patterns: [],
-    color: 'hsl(199, 89%, 48%)',
-    bgClass: 'category-spx-central',
   },
   {
     id: 'jnt',
