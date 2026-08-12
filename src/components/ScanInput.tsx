@@ -60,9 +60,11 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!value.trim()) return;
-    onScan(value.trim());
+    const currentValue = inputRef.current?.value || value;
+    if (!currentValue.trim()) return;
+    onScan(currentValue.trim().toUpperCase());
     setValue('');
+    if (inputRef.current) inputRef.current.value = '';
     inputRef.current?.focus();
   };
 

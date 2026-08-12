@@ -3,6 +3,7 @@ export type CourierCategory =
   | 'jnt'
   | 'goto'
   | 'jne'
+  | 'spx'
   | 'instan-sameday'
   | 'spare';
 
@@ -27,10 +28,19 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
     bgClass: 'category-shopee',
   },
   {
+    id: 'spx',
+    name: 'Shopee Xpress',
+    shortName: 'SPX',
+    prefixes: ['SPXID'],
+    patterns: [],
+    color: 'hsl(199, 89%, 48%)',
+    bgClass: 'category-spx-central',
+  },
+  {
     id: 'jnt',
     name: 'J&T Express',
     shortName: 'JNT',
-    prefixes: [],
+    prefixes: ['JP', 'JX', 'JD', 'JZ', 'JO'],
     patterns: [],
     color: 'hsl(0, 84%, 50%)',
     bgClass: 'category-jnt',
@@ -39,7 +49,7 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
     id: 'goto',
     name: 'GOTO',
     shortName: 'GOTO',
-    prefixes: [],
+    prefixes: ['GOTO'],
     patterns: [],
     color: 'hsl(142, 70%, 40%)',
     bgClass: 'category-goto',
@@ -48,8 +58,8 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
     id: 'jne',
     name: 'JNE',
     shortName: 'JNE',
-    prefixes: [],
-    patterns: [],
+    prefixes: ['CM'],
+    patterns: [/^[0-9]+$/], // Angka 0-9 saja
     color: 'hsl(262, 83%, 58%)',
     bgClass: 'category-jne',
   },
@@ -58,7 +68,7 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
     name: 'INSTAN',
     shortName: 'ISD',
     prefixes: [],
-    patterns: [],
+    patterns: [/^[A-Z0-9]+$/], // Bebas angka dan huruf, menjadi fallback sebelum spare
     color: 'hsl(45, 93%, 47%)',
     bgClass: 'category-instan-sameday',
   },
@@ -73,7 +83,7 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
   },
 ];
 
-export function detectCategory(resi: string): CourierCategory {
+export function tryDetectCategory(resi: string): CourierCategory | null {
   const trimmed = resi.trim().toUpperCase();
   
   for (const category of COURIER_CATEGORIES) {
@@ -92,7 +102,11 @@ export function detectCategory(resi: string): CourierCategory {
     }
   }
   
-  return 'spare';
+  return null;
+}
+
+export function detectCategory(resi: string): CourierCategory {
+  return tryDetectCategory(resi) || 'spare';
 }
 
 export function getCategoryConfig(category: CourierCategory): CategoryConfig {

@@ -13,17 +13,15 @@ const DISPLAY_NAMES: Record<string, string> = {
   'shopee': 'SHOPEE',
   'jnt': 'J&T',
   'goto': 'GOTO',
-  'jne-zalora': 'JNE',
-  'zalora-sap': 'ZALORA',
-  'lazada': 'LAZADA',
-  'ninja': 'NINJA',
+  'jne': 'JNE',
+  'spx': 'SPX',
   'instan-sameday': 'INSTAN',
-  'spx-central': 'SPX CTR',
   'spare': 'LAINNYA',
 };
 
 const TAB_ICONS: Record<CourierCategory, LucideIcon> = {
   shopee: ShoppingBag,
+  spx: ShoppingBag,
   jnt: Truck,
   goto: Bike,
   jne: Package,

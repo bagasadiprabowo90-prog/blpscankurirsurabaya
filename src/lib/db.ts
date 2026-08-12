@@ -1,5 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { CourierCategory, detectCategory } from './courierCategories';
+import { CourierCategory, detectCategory, tryDetectCategory } from './courierCategories';
 
 export interface ResiRecord {
   id: string;
@@ -71,8 +71,9 @@ export async function addResi(resiNumber: string, forceCategory?: CourierCategor
   const existing = await db.getFromIndex('resi', 'by-resi', trimmed);
   const isDuplicate = !!existing;
   
-  // Use forced category if provided, otherwise detect
-  const category = forceCategory || detectCategory(trimmed);
+  // Use auto-detect first, fallback to forced category, fallback to spare
+  const detected = tryDetectCategory(trimmed);
+  const category = detected || forceCategory || 'spare';
   
   // Get current count for category
   const counterKey = `${category}|${dateKey}`;
@@ -123,8 +124,9 @@ export async function addBulkResi(resiNumbers: string[], forceCategory?: Courier
     batchSet.add(trimmed);
     existingSet.add(trimmed);
     
-    // Use forced category if provided, otherwise detect
-    const category = forceCategory || detectCategory(trimmed);
+    // Use auto-detect first, fallback to forced category, fallback to spare
+    const detected = tryDetectCategory(trimmed);
+    const category = detected || forceCategory || 'spare';
     const counterKey = `${category}|${dateKey}`;
     
     if (counters[counterKey] === undefined) {
