@@ -1,11 +1,44 @@
 import { ResiRecord } from './db';
 import { COURIER_CATEGORIES, CourierCategory } from './courierCategories';
 
+function formatRecord(record: ResiRecord) {
+  const recordDate = new Date(record.timestamp);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const day = recordDate.getDate().toString().padStart(2, '0');
+  const month = months[recordDate.getMonth()];
+  const year = recordDate.getFullYear();
+  const tgl = day + ' ' + month + ' ' + year;
+  const wkt = recordDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  return { tgl, wkt };
+}
+
+function buildTableHtml(records: ResiRecord[], startIndex: number): string {
+  if (records.length === 0) return '';
+  
+  let rows = '';
+  records.forEach((record, i) => {
+    const { tgl, wkt } = formatRecord(record);
+    const no = startIndex + i + 1;
+    rows += '<tr>' +
+      '<td class="no">' + no + '</td>' +
+      '<td class="resi">' + record.resi + '</td>' +
+      '<td class="waktu">' + tgl + ' ' + wkt + '</td>' +
+      '</tr>';
+  });
+
+  return '<table>' +
+    '<thead><tr>' +
+    '<th class="no">NO</th>' +
+    '<th class="resi">NOMOR RESI</th>' +
+    '<th class="waktu">WAKTU</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table>';
+}
+
 export function printReport(records: ResiRecord[], category: CourierCategory) {
   const categoryConfig = COURIER_CATEGORIES.find(c => c.id === category);
-  
   const categoryName = categoryConfig?.name || category;
-
   const categoryColor = categoryConfig?.color || 'hsl(220, 9%, 46%)';
   
   const now = new Date();
@@ -20,6 +53,14 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
     minute: '2-digit',
   });
 
+  // Split records into left and right columns
+  const half = Math.ceil(records.length / 2);
+  const leftRecords = records.slice(0, half);
+  const rightRecords = records.slice(half);
+
+  const leftTable = buildTableHtml(leftRecords, 0);
+  const rightTable = buildTableHtml(rightRecords, half);
+
   const printContent = `
     <!DOCTYPE html>
     <html>
@@ -28,7 +69,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
       <style>
         @page {
           size: A4;
-          margin: 15mm;
+          margin: 12mm;
         }
         * { 
           box-sizing: border-box; 
@@ -37,90 +78,90 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
         }
         body {
           font-family: Arial, sans-serif;
-          font-size: 12px;
+          font-size: 11px;
           background: white;
           color: #333;
         }
-        .page {
-          width: 100%;
-        }
         .header {
           text-align: center;
-          padding-bottom: 15px;
-          border-bottom: 3px solid ${categoryColor};
-          margin-bottom: 15px;
-          break-after: avoid-page;
-          page-break-after: avoid;
+          padding-bottom: 12px;
+          border-bottom: 2px solid #333;
+          margin-bottom: 12px;
         }
         .header h1 {
-          font-size: 28px;
+          font-size: 22px;
           font-weight: bold;
           color: #333;
-          margin-bottom: 8px;
-          letter-spacing: 2px;
+          margin-bottom: 4px;
+          letter-spacing: 1px;
         }
         .header .category-badge {
           display: inline-block;
           background: ${categoryColor};
           color: white;
-          padding: 6px 20px;
-          font-size: 14px;
+          padding: 4px 16px;
+          font-size: 12px;
           font-weight: bold;
-          border-radius: 4px;
-          margin-top: 5px;
+          border-radius: 3px;
+          margin-top: 4px;
         }
         .header .total {
-          font-size: 16px;
+          font-size: 13px;
           color: #333;
-          margin-top: 8px;
+          margin-top: 6px;
           font-weight: bold;
         }
-        .content {
-          display: block;
-          break-before: avoid-page;
-          page-break-before: avoid;
+
+        .columns {
+          display: flex;
+          gap: 12px;
+          width: 100%;
         }
+        .column {
+          flex: 1;
+          min-width: 0;
+        }
+
         table {
           width: 100%;
           border-collapse: collapse;
-          font-size: 11px;
-          page-break-inside: auto;
+          font-size: 10px;
         }
         thead { display: table-header-group; }
-        tr { page-break-inside: avoid; page-break-after: auto; }
+        tr { page-break-inside: avoid; }
         th {
-          background: white;
-          color: #2563eb;
-          padding: 8px 14px;
+          background: #f0f0f0;
+          color: #333;
+          padding: 5px 8px;
           text-align: left;
           font-weight: bold;
-          font-size: 11px;
-          border: 1px solid #ddd;
+          font-size: 10px;
+          border: 1px solid #ccc;
           white-space: nowrap;
         }
-        th.no { text-align: center; padding: 8px 12px; }
-        th.resi { }
+        th.no { text-align: center; width: 30px; }
         th.waktu { text-align: center; }
         td {
-          padding: 5px 14px;
-          border: 1px solid #ddd;
+          padding: 3px 8px;
+          border: 1px solid #ccc;
           vertical-align: middle;
           line-height: 1.3;
         }
-        td.no { text-align: center; font-weight: bold; font-size: 10px; padding: 5px 12px; }
+        td.no { text-align: center; font-weight: bold; font-size: 9px; }
         td.resi { 
           font-family: 'Courier New', monospace; 
           font-weight: bold;
-          font-size: 11px;
+          font-size: 10px;
         }
-        td.waktu { text-align: center; font-size: 10px; white-space: nowrap; }
-        tr:nth-child(even) { background: #f9f9f9; }
+        td.waktu { text-align: center; font-size: 9px; white-space: nowrap; }
+        tr:nth-child(even) { background: #fafafa; }
+
         .footer {
           width: 100%;
-          margin-top: 30px;
-          padding-top: 15px;
+          margin-top: 24px;
+          padding-top: 12px;
           border-top: 2px solid #333;
-          font-size: 14px;
+          font-size: 12px;
           page-break-inside: avoid;
           break-inside: avoid;
         }
@@ -128,92 +169,57 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           display: flex;
           justify-content: space-between;
         }
-        .footer-left {
-          text-align: left;
-        }
+        .footer-left { text-align: left; }
         .footer-left .location {
           font-weight: bold;
-          margin-bottom: 5px;
+          margin-bottom: 4px;
         }
         .footer-left .pic {
-          margin-top: 80px;
+          margin-top: 70px;
           font-weight: bold;
-          font-size: 16px;
+          font-size: 14px;
         }
-        .footer-right {
-          text-align: right;
-        }
+        .footer-right { text-align: right; }
         .footer-right .kurir {
           font-weight: bold;
-          margin-bottom: 5px;
+          margin-bottom: 4px;
         }
         .footer-right .ttd {
-          margin-top: 80px;
+          margin-top: 70px;
           font-weight: bold;
-          font-size: 16px;
+          font-size: 14px;
         }
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .page { page-break-after: auto; }
         }
       </style>
     </head>
     <body>
-      <div class="page">
-        <div class="header">
-          <h1>BLP BEAUTY</h1>
-          <div class="category-badge">${categoryName.toUpperCase()}</div>
-          <div class="total">Total: ${records.length} Resi</div>
+      <div class="header">
+        <h1>BLP BEAUTY</h1>
+        <div class="category-badge">${categoryName.toUpperCase()}</div>
+        <div class="total">Total: ${records.length} Resi</div>
+      </div>
+      
+      <div class="columns">
+        <div class="column">
+          ${leftTable}
         </div>
-        
-        <div class="content">
-          <table id="resi-table">
-            <thead>
-              <tr>
-                <th class="no">NO</th>
-                <th class="resi">NOMOR RESI</th>
-                <th class="waktu">WAKTU</th>
-                <th class="no" style="border-left: 2px solid #333;">NO</th>
-                <th class="resi">NOMOR RESI</th>
-                <th class="waktu">WAKTU</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${Array.from({ length: Math.ceil(records.length / 2) }).map((_, i) => {
-                const renderCell = (record: ResiRecord | undefined, index: number, isRight: boolean) => {
-                  if (!record) return '<td class="no"' + (isRight ? ' style="border-left: 2px solid #333;"' : '') + '></td><td class="resi"></td><td class="waktu"></td>';
-                  const recordDate = new Date(record.timestamp);
-                  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-                  const day = recordDate.getDate().toString().padStart(2, '0');
-                  const month = months[recordDate.getMonth()];
-                  const year = recordDate.getFullYear();
-                  const tgl = day + ' ' + month + ' ' + year;
-                  const wkt = recordDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                  return '<td class="no"' + (isRight ? ' style="border-left: 2px solid #333;"' : '') + '>' + (index + 1) + '</td>' +
-                         '<td class="resi">' + record.resi + '</td>' +
-                         '<td class="waktu">' + tgl + ' ' + wkt + '</td>';
-                };
-                
-                return '<tr>' + 
-                  renderCell(records[i * 2], i * 2, false) + 
-                  renderCell(records[i * 2 + 1], i * 2 + 1, true) + 
-                  '</tr>';
-              }).join('')}
-            </tbody>
-          </table>
-          
-          <div class="footer" id="report-footer">
-            <div class="footer-content">
-              <div class="footer-left">
-                <div class="location">Surabaya, ${tanggal}</div>
-                <div class="location">Pukul ${waktu}</div>
-                <div class="pic">PIC BLP</div>
-              </div>
-              <div class="footer-right">
-                <div class="kurir">Kurir: ${categoryName}</div>
-                <div class="ttd">TTD</div>
-              </div>
-            </div>
+        <div class="column">
+          ${rightTable}
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-content">
+          <div class="footer-left">
+            <div class="location">Surabaya, ${tanggal}</div>
+            <div class="location">Pukul ${waktu}</div>
+            <div class="pic">PIC BLP</div>
+          </div>
+          <div class="footer-right">
+            <div class="kurir">Kurir: ${categoryName}</div>
+            <div class="ttd">TTD</div>
           </div>
         </div>
       </div>

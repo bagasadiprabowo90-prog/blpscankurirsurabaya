@@ -1,6 +1,5 @@
 import { COURIER_CATEGORIES, CourierCategory } from '@/lib/courierCategories';
 import { cn } from '@/lib/utils';
-import { Boxes, Package, ShoppingBag, Truck, Zap, Bike, type LucideIcon } from 'lucide-react';
 
 interface CategoryTabsProps {
   activeCategory: CourierCategory;
@@ -8,68 +7,47 @@ interface CategoryTabsProps {
   counts: Record<CourierCategory, number>;
 }
 
-// Nama pendek yang jelas untuk setiap kurir
 const DISPLAY_NAMES: Record<string, string> = {
-  'shopee': 'SHOPEE',
+  'shopee': 'Shopee',
   'jnt': 'J&T',
-  'goto': 'GOTO',
+  'goto': 'GoTo',
   'jne': 'JNE',
-  'instan-sameday': 'INSTAN',
-  'spare': 'LAINNYA',
-};
-
-const TAB_ICONS: Record<CourierCategory, LucideIcon> = {
-  shopee: ShoppingBag,
-  jnt: Truck,
-  goto: Bike,
-  jne: Package,
-  'instan-sameday': Zap,
-  spare: Boxes,
+  'instan-sameday': 'Instan',
+  'spare': 'Lainnya',
 };
 
 export function CategoryTabs({ activeCategory, onCategoryChange, counts }: CategoryTabsProps) {
   return (
-    <div className="bg-card rounded-xl border shadow-sm p-2 sm:p-3">
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+    <div className="border-b">
+      <div className="flex overflow-x-auto -mb-px">
         {COURIER_CATEGORIES.map((category) => {
           const count = counts[category.id] || 0;
           const isActive = activeCategory === category.id;
           const displayName = DISPLAY_NAMES[category.id] || category.shortName;
-          const Icon = TAB_ICONS[category.id];
-          
+
           return (
             <button
               key={category.id}
               onClick={() => onCategoryChange(category.id)}
-              style={{
-                backgroundColor: isActive ? category.color : undefined,
-                borderColor: category.color,
-              }}
               className={cn(
-                "flex flex-col items-center justify-center px-2 py-2.5 sm:py-3 rounded-lg font-bold transition-all border-2 min-w-0",
-                "hover:scale-105 active:scale-95",
-                isActive 
-                  ? "text-white shadow-lg" 
-                  : "bg-background hover:opacity-80"
+                "relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors",
+                "border-b-2 -mb-px",
+                isActive
+                  ? "border-current text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
               )}
+              style={isActive ? { color: category.color } : undefined}
             >
+              <span>{displayName}</span>
               <span
                 className={cn(
-                  "w-6 h-6 sm:w-7 sm:h-7 rounded-full mb-1 flex items-center justify-center",
-                  isActive ? "bg-white/25" : "bg-muted"
+                  "text-xs tabular-nums min-w-[1.25rem] text-center rounded px-1 py-0.5",
+                  isActive
+                    ? "bg-current/10 font-semibold"
+                    : "bg-muted text-muted-foreground"
                 )}
+                style={isActive ? { backgroundColor: `color-mix(in srgb, ${category.color} 15%, transparent)`, color: category.color } : undefined}
               >
-                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </span>
-              <span className="text-xs sm:text-sm font-bold leading-tight">
-                {displayName}
-              </span>
-              <span className={cn(
-                "text-xs sm:text-sm mt-1 px-2 py-0.5 rounded-full font-bold",
-                isActive 
-                  ? "bg-white/30 text-white" 
-                  : "bg-muted text-foreground"
-              )}>
                 {count}
               </span>
             </button>
