@@ -116,10 +116,13 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
         td.waktu { text-align: center; font-size: 10px; white-space: nowrap; }
         tr:nth-child(even) { background: #f9f9f9; }
         .footer {
-          margin-top: 20px;
+          width: 100%;
+          margin-top: 30px;
           padding-top: 15px;
           border-top: 2px solid #333;
-          font-size: 12px;
+          font-size: 14px;
+          page-break-inside: avoid;
+          break-inside: avoid;
         }
         .footer-content {
           display: flex;
@@ -133,8 +136,9 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           margin-bottom: 5px;
         }
         .footer-left .pic {
-          margin-top: 70px;
+          margin-top: 80px;
           font-weight: bold;
+          font-size: 16px;
         }
         .footer-right {
           text-align: right;
@@ -144,8 +148,9 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           margin-bottom: 5px;
         }
         .footer-right .ttd {
-          margin-top: 70px;
+          margin-top: 80px;
           font-weight: bold;
+          font-size: 16px;
         }
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -200,7 +205,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           <div class="footer" id="report-footer">
             <div class="footer-content">
               <div class="footer-left">
-                <div class="location">Bogor, ${tanggal}</div>
+                <div class="location">Surabaya, ${tanggal}</div>
                 <div class="location">Pukul ${waktu}</div>
                 <div class="pic">PIC BLP</div>
               </div>
@@ -221,9 +226,6 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.onload = () => {
-      const table = printWindow.document.getElementById('resi-table');
-      const footer = printWindow.document.getElementById('report-footer');
-      if (table && footer) footer.style.width = `${table.getBoundingClientRect().width}px`;
       printWindow.print();
     };
   }
