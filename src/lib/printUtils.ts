@@ -81,7 +81,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           page-break-before: avoid;
         }
         table {
-          width: auto;
+          width: 100%;
           border-collapse: collapse;
           font-size: 11px;
           page-break-inside: auto;
@@ -168,24 +168,30 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
                 <th class="no">NO</th>
                 <th class="resi">NOMOR RESI</th>
                 <th class="waktu">WAKTU</th>
+                <th class="no" style="border-left: 2px solid #333;">NO</th>
+                <th class="resi">NOMOR RESI</th>
+                <th class="waktu">WAKTU</th>
               </tr>
             </thead>
             <tbody>
-              ${records.map((record, index) => {
-                const recordDate = new Date(record.timestamp);
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-                const day = recordDate.getDate().toString().padStart(2, '0');
-                const month = months[recordDate.getMonth()];
-                const year = recordDate.getFullYear();
-                const tgl = day + ' ' + month + ' ' + year;
-                const wkt = recordDate.toLocaleTimeString('id-ID', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                });
-                return '<tr>' +
-                  '<td class="no">' + (index + 1) + '</td>' +
-                  '<td class="resi">' + record.resi + '</td>' +
-                  '<td class="waktu">' + tgl + ' ' + wkt + '</td>' +
+              ${Array.from({ length: Math.ceil(records.length / 2) }).map((_, i) => {
+                const renderCell = (record: ResiRecord | undefined, index: number, isRight: boolean) => {
+                  if (!record) return '<td class="no"' + (isRight ? ' style="border-left: 2px solid #333;"' : '') + '></td><td class="resi"></td><td class="waktu"></td>';
+                  const recordDate = new Date(record.timestamp);
+                  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                  const day = recordDate.getDate().toString().padStart(2, '0');
+                  const month = months[recordDate.getMonth()];
+                  const year = recordDate.getFullYear();
+                  const tgl = day + ' ' + month + ' ' + year;
+                  const wkt = recordDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                  return '<td class="no"' + (isRight ? ' style="border-left: 2px solid #333;"' : '') + '>' + (index + 1) + '</td>' +
+                         '<td class="resi">' + record.resi + '</td>' +
+                         '<td class="waktu">' + tgl + ' ' + wkt + '</td>';
+                };
+                
+                return '<tr>' + 
+                  renderCell(records[i * 2], i * 2, false) + 
+                  renderCell(records[i * 2 + 1], i * 2 + 1, true) + 
                   '</tr>';
               }).join('')}
             </tbody>

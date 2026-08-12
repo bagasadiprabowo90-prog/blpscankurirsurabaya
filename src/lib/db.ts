@@ -349,3 +349,26 @@ export async function importFromJSON(jsonString: string): Promise<{ imported: nu
   
   return { imported, skipped };
 }
+
+export async function deleteResiByCategory(category: CourierCategory): Promise<number> {
+  const db = await getDB();
+  const allResi = await db.getAllFromIndex('resi', 'by-category', category);
+  
+  if (allResi.length === 0) return 0;
+  
+  const tx = db.transaction(['resi', 'counters'], 'readwrite');
+  for (const record of allResi) {
+    tx.objectStore('resi').delete(record.id);
+  }
+  
+  // Clean up counters for this category
+  const allCounters = await tx.objectStore('counters').getAll();
+  for (const counter of allCounters) {
+    if (counter.category === category) {
+      tx.objectStore('counters').delete(counter.key);
+    }
+  }
+  
+  await tx.done;
+  return allResi.length;
+}

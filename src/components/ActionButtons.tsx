@@ -38,6 +38,8 @@ interface ActionButtonsProps {
   onImportJSON: (file: File) => void;
   duplicateCount: number;
   isLoading?: boolean;
+  activeCategoryName: string;
+  onResetCategory: () => void;
 }
 
 export function ActionButtons({
@@ -50,8 +52,11 @@ export function ActionButtons({
   onImportJSON,
   duplicateCount,
   isLoading,
+  activeCategoryName,
+  onResetCategory,
 }: ActionButtonsProps) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetCategoryDialogOpen, setResetCategoryDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -134,6 +139,13 @@ export function ActionButtons({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
+              onClick={() => setResetCategoryDialogOpen(true)}
+              className="text-destructive font-medium"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Reset Tab {activeCategoryName}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
               onClick={() => setResetDialogOpen(true)}
               className="text-destructive"
             >
@@ -174,6 +186,32 @@ export function ActionButtons({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Ya, Reset Semua
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Category Confirmation Dialog */}
+      <AlertDialog open={resetCategoryDialogOpen} onOpenChange={setResetCategoryDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Data {activeCategoryName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini akan menghapus semua data resi di tab <b>{activeCategoryName}</b>.
+              Data di tab lain tidak akan terpengaruh.
+              Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onResetCategory();
+                setResetCategoryDialogOpen(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Ya, Hapus Data {activeCategoryName}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

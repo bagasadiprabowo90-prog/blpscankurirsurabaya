@@ -11,6 +11,7 @@ import {
   deleteResi, 
   deleteDuplicates, 
   resetAllData, 
+  deleteResiByCategory,
   getStats,
   reorderRowNumbers,
   markAsSynced,
@@ -244,6 +245,30 @@ const Index = () => {
     }
   }, [toast]);
 
+  // Handle reset current category
+  const handleResetCategory = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const deletedCount = await deleteResiByCategory(activeCategory);
+      await loadData();
+      
+      toast({
+        title: "✅ Data Tab Direset",
+        description: `${deletedCount} resi di tab ini berhasil dihapus`,
+      });
+      soundManager.playSuccess();
+    } catch (error) {
+      console.error('Error resetting category data:', error);
+      toast({
+        title: "❌ Gagal",
+        description: "Gagal mereset data tab",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeCategory, toast, loadData]);
+
   // Handle export to Excel
   const handleExportExcel = useCallback(async () => {
     try {
@@ -441,6 +466,8 @@ const Index = () => {
                 onImportJSON={handleImportJSON}
                 duplicateCount={stats.duplicates}
                 isLoading={isLoading}
+                activeCategoryName={COURIER_CATEGORIES.find(c => c.id === activeCategory)?.name || 'Aktif'}
+                onResetCategory={handleResetCategory}
               />
             </div>
           </div>
