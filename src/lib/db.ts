@@ -61,7 +61,7 @@ export async function getDB(): Promise<IDBPDatabase<ResiDBSchema>> {
   return dbInstance;
 }
 
-export async function addResi(resiNumber: string, forceCategory?: CourierCategory): Promise<{ record: ResiRecord; isDuplicate: boolean }> {
+export async function addResi(resiNumber: string, forceCategory?: CourierCategory): Promise<{ record: ResiRecord | null; isDuplicate: boolean; isWrongCategory?: boolean; detectedCategory?: CourierCategory | null }> {
   const db = await getDB();
   const trimmed = resiNumber.trim().toUpperCase();
   const now = Date.now();
@@ -71,8 +71,14 @@ export async function addResi(resiNumber: string, forceCategory?: CourierCategor
   const existing = await db.getFromIndex('resi', 'by-resi', trimmed);
   const isDuplicate = !!existing;
   
-  // Use auto-detect first, fallback to forced category, fallback to spare
+  // Use auto-detect first
   const detected = tryDetectCategory(trimmed);
+  
+  // Strict matching: if user is in a specific tab (forceCategory) and the scanned resi strictly belongs to another tab, reject it.
+  if (forceCategory && detected && detected !== forceCategory) {
+    return { record: null, isDuplicate: false, isWrongCategory: true, detectedCategory: detected };
+  }
+  
   const category = detected || forceCategory || 'spare';
   
   // Get current count for category
@@ -96,10 +102,11 @@ export async function addResi(resiNumber: string, forceCategory?: CourierCategor
   return { record, isDuplicate };
 }
 
-export async function addBulkResi(resiNumbers: string[], forceCategory?: CourierCategory): Promise<{ records: ResiRecord[]; duplicates: number }> {
+export async function addBulkResi(resiNumbers: string[], forceCategory?: CourierCategory): Promise<{ records: ResiRecord[]; duplicates: number; rejected: number }> {
   const db = await getDB();
   const records: ResiRecord[] = [];
   let duplicates = 0;
+  let rejected = 0;
   
   // Get all existing resi numbers for fast lookup
   const allResi = await db.getAllFromIndex('resi', 'by-resi');
@@ -124,8 +131,15 @@ export async function addBulkResi(resiNumbers: string[], forceCategory?: Courier
     batchSet.add(trimmed);
     existingSet.add(trimmed);
     
-    // Use auto-detect first, fallback to forced category, fallback to spare
+    // Use auto-detect first
     const detected = tryDetectCategory(trimmed);
+    
+    // Strict matching: reject if belongs to another tab
+    if (forceCategory && detected && detected !== forceCategory) {
+      rejected++;
+      continue;
+    }
+    
     const category = detected || forceCategory || 'spare';
     const counterKey = `${category}|${dateKey}`;
     
@@ -159,7 +173,7 @@ export async function addBulkResi(resiNumbers: string[], forceCategory?: Courier
   }
   await tx.done;
   
-  return { records, duplicates };
+  return { records, duplicates, rejected };
 }
 
 export async function getAllResi(): Promise<ResiRecord[]> {

@@ -83,6 +83,32 @@ class SoundManager {
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + 0.35);
   }
+
+  playReject(): void {
+    const ctx = this.getContext();
+    
+    const playBuzzer = (time: number) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.setValueAtTime(120, time);
+      oscillator.type = 'sawtooth';
+
+      // Sangat keras untuk reject
+      gainNode.gain.setValueAtTime(1.0, time);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
+
+      oscillator.start(time);
+      oscillator.stop(time + 0.4);
+    };
+
+    // TET TET (dua kali buzz panjang)
+    playBuzzer(ctx.currentTime);
+    playBuzzer(ctx.currentTime + 0.45);
+  }
 }
 
 export const soundManager = new SoundManager();

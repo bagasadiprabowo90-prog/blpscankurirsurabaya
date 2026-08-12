@@ -86,10 +86,25 @@ const Index = () => {
     return counts;
   }, [records]);
 
-  // Core scan processing function (used by queue)
   const processScan = useCallback(async (resi: string) => {
     try {
-      const { record, isDuplicate } = await addResi(resi, activeCategoryRef.current);
+      const result = await addResi(resi, activeCategoryRef.current);
+      
+      if (result.isWrongCategory) {
+        soundManager.playReject();
+        toast({
+          title: "❌ Salah Tab!",
+          description: `Resi ini milik ${result.detectedCategory?.toUpperCase()}, bukan ${activeCategoryRef.current.toUpperCase()}`,
+          variant: "destructive",
+        });
+        setLastResult({ success: false, isDuplicate: false }); // bisa tambah field error di state jika diperlukan, tapi success: false sudah memunculkan merah (atau kita butuh shake)
+        // Kita trigger shake lewat lastResult
+        setLastResult({ success: false, isDuplicate: true }); // hack sementara agar komponen ScanInput mendeteksi error dan shake
+        setTimeout(() => setLastResult(null), 1500);
+        return;
+      }
+      
+      const { record, isDuplicate } = result as { record: ResiRecord; isDuplicate: boolean };
       
       setRecords(prev => [...prev, record]);
       setStats(prev => ({
@@ -141,25 +156,33 @@ const Index = () => {
     addToQueue(resi);
   }, [addToQueue]);
 
-  // Handle bulk upload
   const handleBulkUpload = useCallback(async (resiList: string[]) => {
     setIsLoading(true);
     try {
       // Pass activeCategory to force all bulk resi into current tab's category
-      const { records: newRecords, duplicates } = await addBulkResi(resiList, activeCategory);
+      const { records: newRecords, duplicates, rejected } = await addBulkResi(resiList, activeCategory);
       
       setRecords(prev => [...prev, ...newRecords]);
       await loadData(); // Refresh stats
       
-      toast({
-        title: "✅ Upload Berhasil",
-        description: `${newRecords.length} resi ditambahkan (${duplicates} duplikat)`,
-      });
-      
-      if (duplicates > 0) {
-        soundManager.playDuplicateAlert();
+      if (rejected > 0) {
+        toast({
+          title: "⚠️ Beberapa Resi Ditolak",
+          description: `${newRecords.length} berhasil, ${duplicates} duplikat, ${rejected} ditolak karena salah kurir`,
+          variant: "destructive",
+        });
+        soundManager.playReject();
       } else {
-        soundManager.playSuccess();
+        toast({
+          title: "✅ Upload Berhasil",
+          description: `${newRecords.length} resi ditambahkan (${duplicates} duplikat)`,
+        });
+        
+        if (duplicates > 0) {
+          soundManager.playDuplicateAlert();
+        } else {
+          soundManager.playSuccess();
+        }
       }
     } catch (error) {
       console.error('Error bulk upload:', error);
