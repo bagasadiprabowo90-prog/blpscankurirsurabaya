@@ -91,7 +91,7 @@ export function ActionButtons({
           size="sm"
           onClick={onPrintReport}
           disabled={isLoading}
-          className="gap-2"
+          className="gap-2 text-foreground"
         >
           <Printer className="w-4 h-4" />
           <span className="hidden sm:inline">Print</span>
@@ -103,7 +103,7 @@ export function ActionButtons({
           size="sm"
           onClick={onExportExcel}
           disabled={isLoading}
-          className="gap-2"
+          className="gap-2 text-foreground"
         >
           <FileSpreadsheet className="w-4 h-4" />
           <span className="hidden sm:inline">Excel</span>
@@ -115,7 +115,7 @@ export function ActionButtons({
           size="sm"
           onClick={onSyncGoogleSheets}
           disabled={isLoading}
-          className="gap-2"
+          className="gap-2 text-foreground"
         >
           <Link className="w-4 h-4" />
           <span className="hidden sm:inline">Sync</span>
@@ -124,7 +124,7 @@ export function ActionButtons({
         {/* More Options - Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2 text-foreground">
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
