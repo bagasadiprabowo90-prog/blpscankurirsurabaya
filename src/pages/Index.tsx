@@ -30,7 +30,7 @@ import { useScanQueue } from '@/hooks/useScanQueue';
 import { useGlobalScanCapture } from '@/hooks/useGlobalScanCapture';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { FlaskConical } from 'lucide-react';
+import { FlaskConical, Clock, UploadCloud } from 'lucide-react';
 
 
 const Index = () => {
@@ -94,7 +94,7 @@ const Index = () => {
       if (result.isWrongCategory) {
         soundManager.playReject();
         toast({
-          title: "❌ Salah Tab!",
+          title: "Salah Tab!",
           description: `Resi ini milik ${result.detectedCategory?.toUpperCase()}, bukan ${activeCategoryRef.current.toUpperCase()}`,
           variant: "destructive",
         });
@@ -122,7 +122,7 @@ const Index = () => {
       if (isDuplicate) {
         soundManager.playDuplicateAlert();
         toast({
-          title: "⚠️ Resi Duplikat!",
+          title: "Resi Duplikat!",
           description: `${resi} sudah pernah diinput sebelumnya`,
           variant: "destructive",
         });
@@ -168,14 +168,14 @@ const Index = () => {
       
       if (rejected > 0) {
         toast({
-          title: "⚠️ Beberapa Resi Ditolak",
+          title: "Beberapa Resi Ditolak",
           description: `${newRecords.length} berhasil, ${duplicates} duplikat, ${rejected} ditolak karena salah kurir`,
           variant: "destructive",
         });
         soundManager.playReject();
       } else {
         toast({
-          title: "✅ Upload Berhasil",
+          title: "Upload Berhasil",
           description: `${newRecords.length} resi ditambahkan (${duplicates} duplikat)`,
         });
         
@@ -188,7 +188,7 @@ const Index = () => {
     } catch (error) {
       console.error('Error bulk upload:', error);
       toast({
-        title: "❌ Upload Gagal",
+        title: "Upload Gagal",
         description: "Terjadi kesalahan saat memproses file",
         variant: "destructive",
       });
@@ -216,7 +216,7 @@ const Index = () => {
       await loadData();
       
       toast({
-        title: "✅ Duplikat Dihapus",
+        title: "Duplikat Dihapus",
         description: `${count} resi duplikat telah dihapus`,
       });
     } catch (error) {
@@ -235,7 +235,7 @@ const Index = () => {
       setStats({ total: 0, duplicates: 0, byCategory: {} as Record<CourierCategory, number> });
       
       toast({
-        title: "✅ Data Direset",
+        title: "Data Direset",
         description: "Semua data telah dihapus",
       });
     } catch (error) {
@@ -253,14 +253,14 @@ const Index = () => {
       await loadData();
       
       toast({
-        title: "✅ Data Tab Direset",
+        title: "Data Tab Direset",
         description: `${deletedCount} resi di tab ini berhasil dihapus`,
       });
       soundManager.playSuccess();
     } catch (error) {
       console.error('Error resetting category data:', error);
       toast({
-        title: "❌ Gagal",
+        title: "Gagal",
         description: "Gagal mereset data tab",
         variant: "destructive",
       });
@@ -274,13 +274,13 @@ const Index = () => {
     try {
       await exportToExcel(records);
       toast({
-        title: "✅ Export Berhasil",
+        title: "Export Berhasil",
         description: "File Excel telah diunduh",
       });
     } catch (error) {
       console.error('Error exporting:', error);
       toast({
-        title: "❌ Export Gagal",
+        title: "Export Gagal",
         description: "Terjadi kesalahan saat export file",
         variant: "destructive",
       });
@@ -300,7 +300,7 @@ const Index = () => {
       // Kalau semua sudah ditandai synced tapi sheet masih kosong, offer force sync
       if (!force && unsyncedRecords.length === 0) {
         toast({
-          title: '✅ Sudah ditandai tersinkron',
+          title: 'Sudah ditandai tersinkron',
           description:
             'Di HP ini semua data sudah ditandai “synced”. Jika Google Sheets masih kosong, klik Sync Ulang Semua.',
           action: (
@@ -328,7 +328,7 @@ const Index = () => {
       }
 
       toast({
-        title: result.success ? '✅ Sync Terkirim' : '⚠️ Sync',
+        title: result.success ? 'Sync Terkirim' : 'Sync',
         description: result.success 
           ? `${result.syncedCount} resi dikirim. Cek Google Sheets untuk konfirmasi.`
           : result.message,
@@ -337,7 +337,7 @@ const Index = () => {
     } catch (error) {
       console.error('Error syncing:', error);
       toast({
-        title: '❌ Sync Gagal',
+        title: 'Sync Gagal',
         description: error instanceof Error ? error.message : 'Terjadi kesalahan saat sync',
         variant: 'destructive',
       });
@@ -371,13 +371,13 @@ const Index = () => {
       URL.revokeObjectURL(url);
       
       toast({
-        title: "✅ Backup Berhasil",
+        title: "Backup Berhasil",
         description: "File JSON telah diunduh",
       });
     } catch (error) {
       console.error('Error exporting JSON:', error);
       toast({
-        title: "❌ Backup Gagal",
+        title: "Backup Gagal",
         description: "Terjadi kesalahan saat export",
         variant: "destructive",
       });
@@ -393,13 +393,13 @@ const Index = () => {
       await loadData();
       
       toast({
-        title: "✅ Restore Berhasil",
+        title: "Restore Berhasil",
         description: `${imported} resi ditambahkan, ${skipped} dilewati (sudah ada)`,
       });
     } catch (error) {
       console.error('Error importing JSON:', error);
       toast({
-        title: "❌ Restore Gagal",
+        title: "Restore Gagal",
         description: error instanceof Error ? error.message : "Format file tidak valid",
         variant: "destructive",
       });
@@ -423,13 +423,13 @@ const Index = () => {
       await loadData();
       
       toast({
-        title: "✅ Test Data Dibuat",
+        title: "Test Data Dibuat",
         description: `${newRecords.length} resi dummy ditambahkan ke tab Lainnya`,
       });
     } catch (error) {
       console.error('Error generating test data:', error);
       toast({
-        title: "❌ Gagal",
+        title: "Gagal",
         description: "Terjadi kesalahan saat membuat data test",
         variant: "destructive",
       });
@@ -440,18 +440,20 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b shadow-sm">
+      {/* Header — nameplate mesin */}
+      <header className="sticky top-0 z-50 bg-[hsl(var(--ink))] text-[hsl(var(--ink-foreground))]">
         <div className="container max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg border-2 border-primary-foreground/20 shrink-0">
-                <span className="font-black text-base sm:text-lg text-primary-foreground tracking-tight">BLP</span>
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-sm bg-primary flex items-center justify-center border-2 border-[hsl(var(--ink-foreground)/0.25)] shrink-0">
+                <span className="font-display font-bold text-base sm:text-lg text-primary-foreground leading-none">BLP</span>
               </div>
               <div className="min-w-0">
-                <h1 className="font-bold text-sm sm:text-lg truncate">BLP Scan Kurir Surabaya</h1>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">
-                  Scan & Kelola Resi
+                <h1 className="font-display font-bold uppercase tracking-wide text-lg sm:text-xl leading-none truncate">
+                  Scan Kurir Surabaya
+                </h1>
+                <p className="font-mono text-[10px] sm:text-xs text-[hsl(var(--ink-foreground)/0.65)] mt-1 truncate">
+                  Scan &amp; Kelola Resi
                 </p>
               </div>
             </div>
@@ -518,16 +520,18 @@ const Index = () => {
                   {percentage}%
                 </span>
               </div>
-              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                <span>
-                  📤 {syncProgress.synced.toLocaleString()}/{syncProgress.total.toLocaleString()} resi
+              <div className="tabular flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <UploadCloud className="h-3.5 w-3.5" />
+                  {syncProgress.synced.toLocaleString()}/{syncProgress.total.toLocaleString()} resi
                 </span>
-                <span>
-                  ⏱️ {elapsedText} • {etaText}
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  {elapsedText} • {etaText}
                 </span>
               </div>
-              <p className="text-xs text-primary font-medium mt-1 animate-pulse">
-                Mengirim ke Google Sheets...
+              <p className="text-xs text-primary font-medium mt-1">
+                Mengirim ke Google Sheets…
               </p>
             </div>
           </div>
@@ -535,7 +539,7 @@ const Index = () => {
       })()}
 
       {/* Main Content */}
-      <main className="container max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+      <main className="container max-w-7xl mx-auto px-3 sm:px-4 pt-4 sm:pt-5 pb-4 sm:pb-6">
         {/* Category Tabs - Full Width at Top */}
         <div className="mb-3 sm:mb-4">
           <CategoryTabs
@@ -590,11 +594,11 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t bg-card/50 py-3 sm:py-4 mt-6 sm:mt-8">
-        <div className="container max-w-7xl mx-auto px-3 sm:px-4 text-center text-xs sm:text-sm text-muted-foreground">
-          <p>
-            Manual Sync ke Google Sheets • Optimized untuk 6.000+ resi/hari • IndexedDB Storage
+      {/* Footer — strip spesifikasi mesin */}
+      <footer className="border-t-2 border-[hsl(var(--ink)/0.15)] mt-6 sm:mt-8 py-3">
+        <div className="container max-w-7xl mx-auto px-3 sm:px-4">
+          <p className="font-display uppercase tracking-widest text-[11px] sm:text-xs text-muted-foreground text-center">
+            Manual sync ke Google Sheets — dibangun untuk 6.000+ resi/hari — IndexedDB lokal
           </p>
         </div>
       </footer>

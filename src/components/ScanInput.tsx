@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Scan, Upload, AlertTriangle, Camera } from 'lucide-react';
+import { Scan, Upload, AlertTriangle, Camera, Clock, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CourierCategory, COURIER_CATEGORIES } from '@/lib/courierCategories';
 import { CameraScanner } from './CameraScanner';
@@ -104,60 +104,58 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
         />
       )}
 
-      <div 
-        className="bg-card rounded-xl border shadow-sm p-4 sm:p-5"
-        style={activeCourierInfo ? { borderColor: activeCourierInfo.color, borderWidth: 2 } : {}}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div 
-              className={cn(
-                "w-11 h-11 rounded-xl flex items-center justify-center",
-                lastResult?.isDuplicate && "bg-destructive/10"
-              )}
-              style={{ backgroundColor: activeCourierInfo ? `${activeCourierInfo.color}20` : 'hsl(var(--primary) / 0.1)' }}
-            >
-              {lastResult?.isDuplicate ? (
-                <AlertTriangle className="w-6 h-6 text-destructive" />
-              ) : (
-                <Scan className="w-6 h-6" style={{ color: activeCourierInfo?.color || 'hsl(var(--primary))' }} />
-              )}
-            </div>
-            <div>
-              <h2 className="font-bold text-lg">
+      <div className="work-panel p-4 sm:p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            {/* Plat identitas kurir / status */}
+            {lastResult?.isDuplicate ? (
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] border-2 border-destructive bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </span>
+            ) : (
+              <span
+                aria-hidden="true"
+                className="h-5 w-5 shrink-0 rounded-[3px] border-2 border-[hsl(var(--ink)/0.35)]"
+                style={{ backgroundColor: activeCourierInfo?.color || 'hsl(var(--primary))' }}
+              />
+            )}
+            <div className="min-w-0">
+              <h2 className="font-display uppercase tracking-wide text-xl font-bold leading-none">
                 {activeCourierInfo ? `Scan ${activeCourierInfo.name}` : 'Scan Resi'}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                {bulkMode ? 'Paste banyak resi sekaligus' : 'Scan barcode atau ketik manual'}
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                {bulkMode ? 'paste banyak resi sekaligus' : 'scan barcode atau ketik manual'}
               </p>
             </div>
-            {/* Queue indicator */}
+            {/* Indikator antrian & counter — ikon Lucide, tanpa emoji */}
             {(queueLength > 0 || processedCount > 0) && (
-              <div className="ml-2 flex items-center gap-2 text-xs">
+              <div className="ml-1 flex shrink-0 items-center gap-1.5 text-xs">
                 {queueLength > 0 && (
-                  <span className="px-2 py-1 bg-amber-500/20 text-amber-600 rounded-full animate-pulse">
-                    ⏳ {queueLength} antrian
+                  <span className="tabular inline-flex items-center gap-1 rounded-[3px] border border-warning/50 bg-warning/15 px-2 py-1 font-bold">
+                    <Clock className="h-3.5 w-3.5" />
+                    {queueLength} antrian
                   </span>
                 )}
                 {processedCount > 0 && (
                   <button
                     onClick={onResetCount}
-                    className="px-2 py-1 bg-green-500/20 text-green-600 rounded-full hover:bg-green-500/30 transition-colors cursor-pointer flex items-center gap-1"
+                    className="tabular inline-flex items-center gap-1 rounded-[3px] border border-success/40 bg-success/10 px-2 py-1 font-bold text-success transition-colors duration-100 hover:bg-success/20 cursor-pointer"
                     title="Klik untuk reset counter"
                   >
-                    ✓ {processedCount} terscan
-                    <span className="text-[10px] opacity-60">✕</span>
+                    <Check className="h-3.5 w-3.5" />
+                    {processedCount} terscan
+                    <X className="h-3 w-3 opacity-60" />
                   </button>
                 )}
               </div>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowCameraScanner(true)}
-              className="gap-1.5 h-9"
+              className="gap-1.5 h-9 rounded-sm border-[hsl(var(--ink)/0.4)]"
             >
               <Camera className="w-4 h-4" />
               <span className="hidden sm:inline">Kamera</span>
@@ -166,7 +164,7 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
               variant="outline"
               size="sm"
               onClick={() => setBulkMode(!bulkMode)}
-              className="gap-1.5 h-9"
+              className="gap-1.5 h-9 rounded-sm border-[hsl(var(--ink)/0.4)]"
             >
               <Upload className="w-4 h-4" />
               <span className="hidden sm:inline">{bulkMode ? 'Satuan' : 'Bulk'}</span>
@@ -180,14 +178,14 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
               value={bulkValue}
               onChange={(e) => setBulkValue(e.target.value)}
               placeholder="Paste nomor resi di sini (pisahkan dengan enter, koma, atau titik koma)..."
-              className="w-full h-36 p-3 rounded-lg border bg-background font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full h-36 p-3 rounded-sm border-2 border-[hsl(var(--ink)/0.35)] bg-background font-mono text-sm resize-none transition-[border-color,box-shadow] duration-100 focus:outline-none focus:border-[hsl(var(--ink))] focus:ring-2 focus:ring-ring/30"
               disabled={disabled}
             />
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">
+              <span className="tabular text-sm font-medium text-muted-foreground">
                 {bulkValue.split(/[\n\r,;]+/).filter(l => l.trim()).length} resi terdeteksi
               </span>
-              <Button onClick={handleBulkSubmit} disabled={disabled || !bulkValue.trim()} className="gap-2">
+              <Button onClick={handleBulkSubmit} disabled={disabled || !bulkValue.trim()} className="gap-2 rounded-sm">
                 <Upload className="w-4 h-4" />
                 Proses Semua
               </Button>
@@ -206,8 +204,10 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
                 onBlur={handleBlur}
                 placeholder={activeCourierInfo ? `Scan resi ${activeCourierInfo.name}...` : 'Scan atau ketik nomor resi...'}
                 className={cn(
-                  "scan-input h-14 pr-12 transition-all text-base",
-                  "focus:scan-glow focus:ring-2 focus:ring-primary",
+                  "scan-input h-14 rounded-sm border-2 pr-12",
+                  "border-[hsl(var(--ink)/0.55)] bg-background",
+                  "transition-[border-color,box-shadow] duration-100",
+                  "focus:scan-glow focus:border-[hsl(var(--ink))] focus:ring-0",
                   shake && "shake border-destructive",
                   lastResult?.success && !lastResult.isDuplicate && "border-success"
                 )}
@@ -217,8 +217,8 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
               />
               <div 
                 className={cn(
-                  "absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full",
-                  "flex items-center justify-center transition-colors",
+                  "absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-[3px]",
+                  "flex items-center justify-center transition-colors duration-100",
                   value ? "pulse-scan" : ""
                 )}
                 style={{ backgroundColor: value ? (activeCourierInfo?.color || 'hsl(var(--primary))') : 'hsl(var(--muted))' }}
@@ -229,7 +229,7 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
             <Button 
               type="submit" 
               disabled={disabled || !value.trim()} 
-              className="h-14 px-6 text-base font-semibold gap-2"
+              className="h-14 px-6 rounded-sm font-display uppercase tracking-wider text-lg font-bold gap-2"
               style={activeCourierInfo ? { backgroundColor: activeCourierInfo.color } : {}}
             >
               <Scan className="w-5 h-5" />

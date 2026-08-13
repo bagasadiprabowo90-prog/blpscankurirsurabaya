@@ -4,6 +4,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hallmark · designed-as-app · theme: industrial-warm-ivory · display: Barlow-Condensed · body: Inter · data: JetBrains-Mono · accent: safety-orange hsl(22 82% 40%) · ink: hsl(28 18% 14%) */
+
 /* Camera scanner animation */
 @keyframes scan-line {
   0%, 100% {
@@ -22,27 +24,28 @@
 
 @layer base {
   :root {
-    /* ===== Warm Ivory Theme ===== */
-    --background: 40 40% 97%;
-    --foreground: 30 25% 12%;
+    /* ===== Industrial Warm Ivory Theme (Hallmark redesign) ===== */
+    --background: 40 38% 96%;
+    --foreground: 28 20% 13%;
 
     --card: 40 33% 99%;
-    --card-foreground: 30 25% 12%;
+    --card-foreground: 28 20% 13%;
 
     --popover: 40 33% 99%;
-    --popover-foreground: 30 25% 12%;
+    --popover-foreground: 28 20% 13%;
 
-    --primary: 217 91% 50%;
-    --primary-foreground: 0 0% 100%;
+    /* Safety-orange — anchor accent */
+    --primary: 22 82% 40%;
+    --primary-foreground: 40 40% 97%;
 
     --secondary: 36 25% 90%;
-    --secondary-foreground: 30 25% 12%;
+    --secondary-foreground: 28 20% 13%;
 
-    --muted: 38 25% 92%;
-    --muted-foreground: 28 10% 44%;
+    --muted: 38 24% 91%;
+    --muted-foreground: 28 10% 42%;
 
-    --accent: 217 91% 95%;
-    --accent-foreground: 217 91% 40%;
+    --accent: 33 30% 88%;
+    --accent-foreground: 28 20% 13%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -53,11 +56,15 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 35 18% 86%;
-    --input: 35 18% 86%;
-    --ring: 217 91% 50%;
+    --border: 35 20% 82%;
+    --input: 35 20% 82%;
+    --ring: 22 82% 45%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
+
+    /* Ink — nameplate & ledger strips */
+    --ink: 28 18% 14%;
+    --ink-foreground: 40 38% 96%;
 
     /* Category Colors */
     --shopee: 16 100% 50%;
@@ -72,7 +79,7 @@
     --spare: 220 9% 46%;
 
     /* Scanner specific */
-    --scan-glow: 217 91% 50%;
+    --scan-glow: 22 82% 45%;
     --duplicate-bg: 0 84% 95%;
     --duplicate-border: 0 84% 60%;
 
@@ -96,8 +103,8 @@
     --popover: 222 47% 9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 24 85% 55%;
+    --primary-foreground: 28 20% 10%;
 
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
@@ -119,7 +126,11 @@
 
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 212 27% 84%;
+    --ring: 24 85% 55%;
+
+    /* Ink terbalik di dark mode agar nameplate tetap kontras */
+    --ink: 40 30% 92%;
+    --ink-foreground: 28 20% 12%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -145,6 +156,17 @@
   .font-mono {
     font-family: 'JetBrains Mono', monospace;
   }
+
+  /* Display face industrial — heading, angka besar, label mesin */
+  .font-display {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-stretch: condensed;
+  }
+
+  /* Angka sejajar vertikal untuk kolom data */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @layer components {
@@ -158,12 +180,23 @@
     display: none;
   }
 
+  /* Panel workbench — satu bahasa containment untuk zona kerja */
+  .work-panel {
+    @apply bg-card rounded-sm border-2 border-[hsl(var(--ink))] overflow-hidden;
+    box-shadow: 4px 4px 0 0 hsl(var(--ink) / 0.12);
+  }
+
+  /* Label mesin — kecil, condensed, uppercase */
+  .panel-label {
+    @apply font-display uppercase tracking-widest text-xs font-semibold text-muted-foreground;
+  }
+
   .scan-input {
     @apply font-mono text-lg tracking-wider uppercase;
   }
 
   .category-badge {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-semibold;
   }
 
   .category-shopee {
@@ -207,11 +240,11 @@
   }
 
   .duplicate-row {
-    @apply bg-[hsl(var(--duplicate-bg))] border-l-4 border-l-[hsl(var(--duplicate-border))];
+    @apply bg-[hsl(var(--duplicate-bg))];
   }
 
   .scan-glow {
-    box-shadow: 0 0 0 3px hsl(var(--scan-glow) / 0.2), 0 0 20px hsl(var(--scan-glow) / 0.15);
+    box-shadow: 0 0 0 3px hsl(var(--scan-glow) / 0.22);
   }
 
   .table-row-enter {

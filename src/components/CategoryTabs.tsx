@@ -59,7 +59,7 @@ export function CategoryTabs({ activeCategory, onCategoryChange, counts }: Categ
       <div
         role="tablist"
         aria-label="Kategori Kurir"
-        className="flex items-stretch gap-1 overflow-x-auto rounded-xl border bg-card p-1.5 shadow-sm no-scrollbar snap-x"
+        className="flex items-stretch gap-1 overflow-x-auto rounded-md border-2 border-[hsl(var(--ink))] bg-card p-1 shadow-[3px_3px_0_0_hsl(var(--ink)/0.12)] no-scrollbar snap-x"
       >
         {COURIER_CATEGORIES.map((category, index) => {
           const count = counts[category.id] || 0;
@@ -81,30 +81,21 @@ export function CategoryTabs({ activeCategory, onCategoryChange, counts }: Categ
               className={cn(
                 // Layout: lebar sama rata di desktop, bisa scroll di mobile
                 'group relative flex flex-1 shrink-0 items-center justify-center gap-1.5 sm:gap-2 snap-start',
-                'whitespace-nowrap select-none rounded-lg px-2.5 sm:px-4 py-2.5',
-                // Tipografi & transisi
-                'text-[13px] sm:text-sm transition-all duration-150',
+                'whitespace-nowrap select-none rounded-[3px] px-2.5 sm:px-4 py-2',
+                // Tipografi plat mesin: condensed, uppercase
+                'font-display uppercase tracking-wide text-sm sm:text-base transition-colors duration-100',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                 isActive
-                  ? 'font-bold shadow-sm'
-                  : 'font-medium text-muted-foreground hover:text-foreground hover:bg-muted/70 active:scale-[0.98]'
+                  ? 'font-bold bg-[hsl(var(--ink))] text-[hsl(var(--ink-foreground))]'
+                  : 'font-semibold text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.98]'
               )}
-              style={
-                isActive
-                  ? {
-                      color: category.color,
-                      backgroundColor: `color-mix(in srgb, ${category.color} 12%, transparent)`,
-                      boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${category.color} 55%, transparent), 0 1px 3px rgb(0 0 0 / 0.08)`,
-                    }
-                  : undefined
-              }
             >
-              {/* Titik warna identitas kurir — selalu terlihat */}
+              {/* Titik warna identitas kurir — selalu terlihat, bahkan di plat aktif */}
               <span
                 aria-hidden="true"
                 className={cn(
-                  'h-2.5 w-2.5 rounded-full shrink-0 transition-transform duration-150',
-                  isActive ? 'scale-125' : 'opacity-80 group-hover:opacity-100'
+                  'h-2.5 w-2.5 rounded-full shrink-0',
+                  !isActive && 'opacity-80 group-hover:opacity-100'
                 )}
                 style={{ backgroundColor: category.color }}
               />
@@ -115,17 +106,11 @@ export function CategoryTabs({ activeCategory, onCategoryChange, counts }: Categ
               {/* Badge jumlah resi */}
               <span
                 className={cn(
-                  'min-w-[1.75rem] rounded-full px-1.5 py-1 text-center text-[11px] leading-none font-bold tabular-nums',
-                  !isActive && 'bg-muted text-muted-foreground'
-                )}
-                style={
+                  'tabular min-w-[1.75rem] rounded-[3px] border px-1.5 py-1 text-center text-[11px] leading-none font-bold',
                   isActive
-                    ? {
-                        backgroundColor: `color-mix(in srgb, ${category.color} 22%, transparent)`,
-                        color: category.color,
-                      }
-                    : undefined
-                }
+                    ? 'border-[hsl(var(--ink-foreground)/0.35)] text-[hsl(var(--ink-foreground))]'
+                    : 'border-border bg-background text-muted-foreground'
+                )}
               >
                 {count.toLocaleString('id-ID')}
               </span>
@@ -136,17 +121,17 @@ export function CategoryTabs({ activeCategory, onCategoryChange, counts }: Categ
         {/* Total resi — non-scroll, sebagai penutup kanan */}
         <div
           aria-hidden="true"
-          className="hidden md:flex items-center gap-1.5 self-center whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground"
+          className="hidden md:flex items-center gap-1.5 self-center whitespace-nowrap px-3 py-2"
         >
-          <span>Total</span>
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold tabular-nums text-foreground">
+          <span className="panel-label">Total</span>
+          <span className="tabular rounded-[3px] border border-[hsl(var(--ink)/0.4)] bg-background px-2 py-0.5 text-[11px] font-bold text-foreground">
             {total.toLocaleString('id-ID')}
           </span>
         </div>
       </div>
 
       {/* Petunjuk visual: konten masih bisa di-scroll (mobile) */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-r-xl bg-gradient-to-l from-card to-transparent sm:hidden" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-r-md bg-gradient-to-l from-card to-transparent sm:hidden" />
     </div>
   );
 }

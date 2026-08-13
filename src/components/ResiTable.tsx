@@ -41,20 +41,20 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
 
   if (records.length === 0) {
     return (
-      <div className="bg-card rounded-xl border shadow-sm">
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+      <div className="work-panel">
+        <div className="flex flex-col items-center justify-center px-6 py-16 text-center text-muted-foreground">
           <Package className="w-16 h-16 mb-4 opacity-40" />
-          <p className="text-xl font-semibold">Belum ada data</p>
-          <p className="text-sm mt-1">Mulai scan resi untuk menampilkan data</p>
+          <p className="font-display uppercase tracking-wide text-2xl font-bold text-foreground">Belum ada data</p>
+          <p className="mt-1 font-mono text-sm">Mulai scan resi untuk menampilkan data</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-      {/* Header - Desktop */}
-      <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-3 bg-muted/50 border-b text-sm font-semibold text-muted-foreground">
+    <div className="work-panel">
+      {/* Header - Desktop (plat gelap ala mesin kasir/ledger) */}
+      <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-[hsl(var(--ink))] font-display uppercase tracking-wider text-xs font-semibold text-[hsl(var(--ink-foreground))]">
         <div className="col-span-1">No</div>
         <div className="col-span-4">Nomor Resi</div>
         {showCategory && <div className="col-span-2">Kategori</div>}
@@ -132,7 +132,7 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
                 </div>
 
                 {/* Desktop Layout */}
-                <div className="hidden sm:block col-span-1 text-sm text-muted-foreground">
+                <div className="tabular hidden sm:block col-span-1 text-sm text-muted-foreground">
                   {record.rowNumber}
                 </div>
                 <div className="hidden sm:block col-span-4 font-mono text-sm font-semibold truncate">
@@ -146,7 +146,7 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
                   </div>
                 )}
                 <div className={cn(
-                  "hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground",
+                  "tabular hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground",
                   showCategory ? "col-span-2" : "col-span-4"
                 )}>
                   <Clock className="w-3.5 h-3.5" />
@@ -154,12 +154,12 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
                 </div>
                 <div className="hidden sm:block col-span-2">
                   {record.isDuplicate ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-destructive/10 text-destructive">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[3px] text-xs font-semibold bg-destructive/10 text-destructive">
                       <AlertTriangle className="w-3.5 h-3.5" />
                       DUPLIKAT
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[3px] text-xs font-semibold bg-success/10 text-success">
                       <CheckCircle className="w-3.5 h-3.5" />
                       OK
                     </span>
@@ -181,8 +181,8 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-4 py-2.5 bg-muted/30 border-t text-sm font-medium text-muted-foreground">
+      {/* Footer — plat penutup gelap */}
+      <div className="tabular px-4 py-2 bg-[hsl(var(--ink))] font-display uppercase tracking-wider text-xs font-semibold text-[hsl(var(--ink-foreground))]">
         Total: {records.length} resi
       </div>
     </div>
