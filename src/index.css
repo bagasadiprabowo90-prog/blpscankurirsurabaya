@@ -22,23 +22,24 @@
 
 @layer base {
   :root {
-    --background: 220 14% 96%;
-    --foreground: 222 47% 11%;
+    /* ===== Warm Ivory Theme ===== */
+    --background: 40 40% 97%;
+    --foreground: 30 25% 12%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 40 33% 99%;
+    --card-foreground: 30 25% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 40 33% 99%;
+    --popover-foreground: 30 25% 12%;
 
     --primary: 217 91% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 90%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 36 25% 90%;
+    --secondary-foreground: 30 25% 12%;
 
-    --muted: 220 14% 92%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 38 25% 92%;
+    --muted-foreground: 28 10% 44%;
 
     --accent: 217 91% 95%;
     --accent-foreground: 217 91% 40%;
@@ -52,8 +53,8 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 220 13% 88%;
-    --input: 220 13% 88%;
+    --border: 35 18% 86%;
+    --input: 35 18% 86%;
     --ring: 217 91% 50%;
 
     --radius: 0.5rem;
@@ -147,6 +148,16 @@
 }
 
 @layer components {
+  /* Sembunyikan scrollbar tapi tetap bisa scroll (untuk tab horizontal di mobile) */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .scan-input {
     @apply font-mono text-lg tracking-wider uppercase;
   }

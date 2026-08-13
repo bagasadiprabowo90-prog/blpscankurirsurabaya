@@ -60,8 +60,8 @@ export default defineConfig(({ mode }) => ({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#ffffff',
-        theme_color: '#FF6B35',
+        background_color: '#FAF8F4',
+        theme_color: '#FAF8F4',
         categories: ['productivity', 'utilities', 'business'],
         icons: [
           {
