@@ -39,18 +39,6 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
     return `${day} ${month} ${year}, ${time}`;
   }, []);
 
-  if (records.length === 0) {
-    return (
-      <div className="work-panel">
-        <div className="flex flex-col items-center justify-center px-6 py-16 text-center text-muted-foreground">
-          <Package className="w-16 h-16 mb-4 opacity-40" />
-          <p className="font-display uppercase tracking-wide text-2xl font-bold text-foreground">Belum ada data</p>
-          <p className="mt-1 font-mono text-sm">Mulai scan resi untuk menampilkan data</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="work-panel">
       {/* Header - Desktop (plat gelap ala mesin kasir/ledger) */}
@@ -63,20 +51,27 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
         <div className="col-span-1 text-right">Aksi</div>
       </div>
 
-      {/* Virtual List */}
+      {/* Virtual List or Empty State */}
       <div
         ref={parentRef}
-        className="overflow-auto"
-        style={{ height: Math.min(600, sortedRecords.length * 56 + 20) }}
+        className="overflow-y-scroll"
+        style={{ height: records.length === 0 ? 300 : Math.min(600, sortedRecords.length * 56 + 20) }}
       >
-        <div
-          style={{
-            height: `${rowVirtualizer.getTotalSize()}px`,
-            width: '100%',
-            position: 'relative',
-          }}
-        >
-          {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+        {records.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full px-6 text-center text-muted-foreground">
+            <Package className="w-16 h-16 mb-4 opacity-40" />
+            <p className="font-display uppercase tracking-wide text-2xl font-bold text-foreground">Belum ada data</p>
+            <p className="mt-1 font-mono text-sm">Mulai scan resi untuk menampilkan data</p>
+          </div>
+        ) : (
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualItem) => {
             const record = sortedRecords[virtualItem.index];
             const category = getCategoryConfig(record.category);
             
@@ -179,6 +174,7 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
             );
           })}
         </div>
+        )}
       </div>
 
       {/* Footer — plat penutup gelap */}

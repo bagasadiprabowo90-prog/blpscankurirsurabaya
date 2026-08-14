@@ -151,6 +151,10 @@
     @apply border-border;
   }
 
+  html {
+    overflow-y: scroll;
+  }
+  
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
