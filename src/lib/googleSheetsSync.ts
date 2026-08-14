@@ -141,16 +141,31 @@ async function syncBatch(
   });
   
   try {
+    // PENTING: gunakan mode default (cors) agar bisa membaca response dari Apps Script.
+    // Apps Script Web App yang di-deploy sebagai "Anyone" mendukung CORS.
+    // no-cors sebelumnya menyebabkan response opaque — kita tidak bisa tahu apakah Apps Script error.
     const response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain', // Apps Script butuh text/plain agar tidak pre-flight OPTIONS gagal
       },
       body: JSON.stringify(payload),
-      mode: 'no-cors'
     });
     
-    console.log('[Sync] Batch sent successfully (no-cors mode, status:', response.type, ')');
+    if (!response.ok) {
+      const errText = await response.text().catch(() => 'no body');
+      console.error('[Sync] HTTP error:', response.status, errText);
+      throw new Error(`Server error ${response.status}: ${errText.slice(0, 200)}`);
+    }
+
+    // Baca response JSON dari Apps Script
+    const result = await response.json().catch(() => null);
+    console.log('[Sync] Batch response:', result);
+
+    if (result && result.success === false) {
+      throw new Error(result.message || 'Apps Script melaporkan error');
+    }
+
     return true;
   } catch (error) {
     console.error('[Sync] Batch failed:', error);

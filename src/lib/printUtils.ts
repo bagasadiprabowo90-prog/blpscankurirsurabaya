@@ -66,6 +66,8 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
     <html>
     <head>
       <title>Laporan Resi - ${categoryName}</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
       <style>
         @page {
           size: A4;
@@ -77,7 +79,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           padding: 0; 
         }
         body {
-          font-family: Arial, sans-serif;
+          font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
           font-size: 11px;
           background: white;
           color: #333;
@@ -196,7 +198,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
     </head>
     <body>
       <div class="header">
-        <h1>BLP BEAUTY</h1>
+        <h1>BLP BEAUTY SURABAYA</h1>
         <div class="category-badge">${categoryName.toUpperCase()}</div>
         <div class="total">Total: ${records.length} Resi</div>
       </div>

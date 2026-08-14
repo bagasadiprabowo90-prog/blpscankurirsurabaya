@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,10 +8,13 @@
 
 /* Camera scanner animation */
 @keyframes scan-line {
-  0%, 100% {
+
+  0%,
+  100% {
     top: 10%;
     opacity: 1;
   }
+
   50% {
     top: 80%;
     opacity: 0.5;
@@ -60,7 +63,7 @@
     --input: 35 20% 82%;
     --ring: 22 82% 45%;
 
-    --radius: 0.25rem;
+    --radius: 0.875rem;
 
     /* Ink — nameplate & ledger strips */
     --ink: 28 18% 14%;
@@ -150,17 +153,16 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
 
   .font-mono {
     font-family: 'JetBrains Mono', monospace;
   }
 
-  /* Display face industrial — heading, angka besar, label mesin */
+  /* Display face — heading, angka besar, label */
   .font-display {
-    font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-stretch: condensed;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   /* Angka sejajar vertikal untuk kolom data */
@@ -170,6 +172,7 @@
 }
 
 @layer components {
+
   /* Sembunyikan scrollbar tapi tetap bisa scroll (untuk tab horizontal di mobile) */
   .no-scrollbar {
     -ms-overflow-style: none;
@@ -182,7 +185,8 @@
 
   /* Panel workbench — satu bahasa containment untuk zona kerja */
   .work-panel {
-    @apply bg-card rounded-sm border-2 border-[hsl(var(--ink))] overflow-hidden;
+    @apply bg-card border-2 border-[hsl(var(--ink))] overflow-hidden;
+    border-radius: var(--radius);
     box-shadow: 4px 4px 0 0 hsl(var(--ink) / 0.12);
   }
 
@@ -200,39 +204,57 @@
   }
 
   .category-shopee {
-    @apply bg-[hsl(16,100%,95%)] text-[hsl(16,100%,40%)] border border-[hsl(16,100%,50%)];
+    background-color: hsl(16, 100%, 95%);
+    color: hsl(16, 100%, 40%);
+    border: 1px solid hsl(16, 100%, 50%);
   }
 
   .category-jnt {
-    @apply bg-[hsl(0,84%,95%)] text-[hsl(0,84%,40%)] border border-[hsl(0,84%,50%)];
+    background-color: hsl(0, 84%, 95%);
+    color: hsl(0, 84%, 40%);
+    border: 1px solid hsl(0, 84%, 50%);
   }
 
   .category-goto {
-    @apply bg-[hsl(142,70%,95%)] text-[hsl(142,70%,30%)] border border-[hsl(142,70%,40%)];
+    background-color: hsl(142, 70%, 95%);
+    color: hsl(142, 70%, 30%);
+    border: 1px solid hsl(142, 70%, 40%);
   }
 
   .category-jne-zalora {
-    @apply bg-[hsl(262,83%,95%)] text-[hsl(262,83%,40%)] border border-[hsl(262,83%,58%)];
+    background-color: hsl(262, 83%, 95%);
+    color: hsl(262, 83%, 40%);
+    border: 1px solid hsl(262, 83%, 58%);
   }
 
   .category-zalora-sap {
-    @apply bg-[hsl(330,80%,95%)] text-[hsl(330,80%,40%)] border border-[hsl(330,80%,50%)];
+    background-color: hsl(330, 80%, 95%);
+    color: hsl(330, 80%, 40%);
+    border: 1px solid hsl(330, 80%, 50%);
   }
 
   .category-lazada {
-    @apply bg-[hsl(217,91%,95%)] text-[hsl(217,91%,40%)] border border-[hsl(217,91%,50%)];
+    background-color: hsl(217, 91%, 95%);
+    color: hsl(217, 91%, 40%);
+    border: 1px solid hsl(217, 91%, 50%);
   }
 
   .category-ninja {
-    @apply bg-[hsl(0,0%,95%)] text-[hsl(0,0%,20%)] border border-[hsl(0,0%,40%)];
+    background-color: hsl(0, 0%, 95%);
+    color: hsl(0, 0%, 20%);
+    border: 1px solid hsl(0, 0%, 40%);
   }
 
   .category-instan-sameday {
-    @apply bg-[hsl(45,93%,95%)] text-[hsl(45,93%,30%)] border border-[hsl(45,93%,47%)];
+    background-color: hsl(45, 93%, 95%);
+    color: hsl(45, 93%, 30%);
+    border: 1px solid hsl(45, 93%, 47%);
   }
 
   .category-spx-central {
-    @apply bg-[hsl(199,89%,95%)] text-[hsl(199,89%,35%)] border border-[hsl(199,89%,48%)];
+    background-color: hsl(199, 89%, 95%);
+    color: hsl(199, 89%, 35%);
+    border: 1px solid hsl(199, 89%, 48%);
   }
 
   .category-spare {
@@ -241,6 +263,11 @@
 
   .duplicate-row {
     @apply bg-[hsl(var(--duplicate-bg))];
+  }
+
+  /* Pastikan baris duplikat tetap merah saat di-hover */
+  .duplicate-row:hover {
+    background-color: hsl(var(--duplicate-bg)) !important;
   }
 
   .scan-glow {
@@ -256,6 +283,7 @@
       opacity: 0;
       transform: translateY(-8px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -263,9 +291,12 @@
   }
 
   @keyframes pulse-scan {
-    0%, 100% {
+
+    0%,
+    100% {
       box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
     }
+
     50% {
       box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
     }
@@ -276,9 +307,26 @@
   }
 
   @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-    20%, 40%, 60%, 80% { transform: translateX(4px); }
+
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: translateX(-4px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translateX(4px);
+    }
   }
 
   .shake {

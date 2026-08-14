@@ -87,7 +87,7 @@ const Index = () => {
     return counts;
   }, [records]);
 
-  const processScan = useCallback(async (resi: string) => {
+  const processScan = useCallback(async (resi: string): Promise<boolean> => {
     try {
       const result = await addResi(resi, activeCategoryRef.current);
       
@@ -102,7 +102,7 @@ const Index = () => {
         // Kita trigger shake lewat lastResult
         setLastResult({ success: false, isDuplicate: true }); // hack sementara agar komponen ScanInput mendeteksi error dan shake
         setTimeout(() => setLastResult(null), 1500);
-        return;
+        return false;
       }
       
       const { record, isDuplicate } = result as { record: ResiRecord; isDuplicate: boolean };
@@ -132,9 +132,13 @@ const Index = () => {
       
       // Reset result indicator after delay
       setTimeout(() => setLastResult(null), 1500);
+      // Hanya resi yang BUKAN wrong category yang dihitung sebagai terscan
+      // Duplikat tetap dihitung karena resi valid (hanya sudah ada sebelumnya)
+      return !isDuplicate;
     } catch (error) {
       console.error('Error adding resi:', error);
       soundManager.playError();
+      return false;
     }
   }, [toast]);
 

@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface UseScanQueueOptions {
-  onProcess: (resi: string) => Promise<void>;
+  onProcess: (resi: string) => Promise<boolean>;
   debounceMs?: number;
 }
 
@@ -27,8 +27,10 @@ export function useScanQueue({ onProcess, debounceMs = 50 }: UseScanQueueOptions
       const resi = queueRef.current[0];
       
       try {
-        await onProcess(resi);
-        setProcessedCount(prev => prev + 1);
+        const isValid = await onProcess(resi);
+        if (isValid) {
+          setProcessedCount(prev => prev + 1);
+        }
       } catch (error) {
         console.error('Error processing resi:', error);
       }

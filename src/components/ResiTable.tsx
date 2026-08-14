@@ -86,8 +86,8 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
                 data-index={virtualItem.index}
                 className={cn(
                   "absolute top-0 left-0 w-full px-4 py-3",
-                  "border-b hover:bg-muted/30 transition-colors table-row-enter",
-                  record.isDuplicate && "duplicate-row",
+                  "border-b transition-colors table-row-enter",
+                  record.isDuplicate ? "duplicate-row" : "hover:bg-muted/30",
                   // Desktop: grid layout
                   "sm:grid sm:grid-cols-12 sm:gap-2 sm:items-center",
                   // Mobile: card layout

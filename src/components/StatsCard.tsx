@@ -15,7 +15,7 @@ export function StatsCard({ total, duplicates, byCategory }: StatsCardProps) {
       <div className="grid grid-cols-2 divide-x-2 divide-[hsl(var(--ink)/0.1)]">
         <div className="px-4 py-3.5">
           <p className="panel-label">Total Resi</p>
-          <p className="tabular font-display text-[2.75rem] leading-none font-bold mt-1.5">
+          <p className="font-display text-[2.75rem] leading-none font-bold mt-1.5" style={{fontVariantNumeric: 'normal'}}>
             {total.toLocaleString('id-ID')}
           </p>
         </div>
@@ -25,9 +25,9 @@ export function StatsCard({ total, duplicates, byCategory }: StatsCardProps) {
             Duplikat
           </p>
           <p className={cn(
-            'tabular font-display text-[2.75rem] leading-none font-bold mt-1.5',
+            'font-display text-[2.75rem] leading-none font-bold mt-1.5',
             duplicates > 0 ? 'text-destructive' : 'text-muted-foreground/40'
-          )}>
+          )} style={{fontVariantNumeric: 'normal'}}>
             {duplicates.toLocaleString('id-ID')}
           </p>
         </div>

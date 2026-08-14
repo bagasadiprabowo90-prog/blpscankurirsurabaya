@@ -59,7 +59,8 @@ export function CategoryTabs({ activeCategory, onCategoryChange, counts }: Categ
       <div
         role="tablist"
         aria-label="Kategori Kurir"
-        className="flex items-stretch gap-1 overflow-x-auto rounded-md border-2 border-[hsl(var(--ink))] bg-card p-1 shadow-[3px_3px_0_0_hsl(var(--ink)/0.12)] no-scrollbar snap-x"
+        className="flex items-stretch gap-1 overflow-x-auto border-2 border-[hsl(var(--ink))] bg-card p-1 shadow-[3px_3px_0_0_hsl(var(--ink)/0.12)] no-scrollbar snap-x"
+        style={{ borderRadius: 'var(--radius)' }}
       >
         {COURIER_CATEGORIES.map((category, index) => {
           const count = counts[category.id] || 0;
@@ -81,7 +82,9 @@ export function CategoryTabs({ activeCategory, onCategoryChange, counts }: Categ
               className={cn(
                 // Layout: lebar sama rata di desktop, bisa scroll di mobile
                 'group relative flex flex-1 shrink-0 items-center justify-center gap-1.5 sm:gap-2 snap-start',
-                'whitespace-nowrap select-none rounded-[3px] px-2.5 sm:px-4 py-2',
+                'whitespace-nowrap select-none px-2.5 sm:px-4 py-2',
+                // radius inner = outer - gap (formula iOS proportional corners)
+                '[border-radius:calc(var(--radius)-4px)]',
                 // Tipografi plat mesin: condensed, uppercase
                 'font-display uppercase tracking-wide text-sm sm:text-base transition-colors duration-100',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
@@ -106,7 +109,8 @@ export function CategoryTabs({ activeCategory, onCategoryChange, counts }: Categ
               {/* Badge jumlah resi */}
               <span
                 className={cn(
-                  'tabular min-w-[1.75rem] rounded-[3px] border px-1.5 py-1 text-center text-[11px] leading-none font-bold',
+                  'tabular min-w-[1.75rem] border px-1.5 py-1 text-center text-[11px] leading-none font-bold',
+                  '[border-radius:calc(var(--radius)-6px)]',
                   isActive
                     ? 'border-[hsl(var(--ink-foreground)/0.35)] text-[hsl(var(--ink-foreground))]'
                     : 'border-border bg-background text-muted-foreground'
