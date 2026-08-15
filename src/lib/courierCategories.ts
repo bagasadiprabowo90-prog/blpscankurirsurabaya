@@ -61,7 +61,7 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
   },
   {
     id: 'instan-sameday',
-    name: 'INSTAN',
+    name: 'Instan',
     shortName: 'ISD',
     prefixes: [],
     patterns: [/^[A-Z0-9]+$/], // Bebas angka dan huruf, menjadi fallback sebelum spare
