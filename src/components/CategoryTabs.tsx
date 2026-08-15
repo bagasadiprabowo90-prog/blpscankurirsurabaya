@@ -128,7 +128,7 @@ export function CategoryTabs({ activeCategory, onCategoryChange, counts }: Categ
           className="hidden md:flex items-center gap-1.5 self-center whitespace-nowrap px-3 py-2"
         >
           <span className="panel-label">Total</span>
-          <span className="tabular rounded-[3px] border border-[hsl(var(--ink)/0.4)] bg-background px-2 py-0.5 text-[11px] font-bold text-foreground">
+          <span className="tabular [border-radius:calc(var(--radius)-6px)] border border-[hsl(var(--ink)/0.4)] bg-background px-2 py-0.5 text-[11px] font-bold text-foreground">
             {total.toLocaleString('id-ID')}
           </span>
         </div>

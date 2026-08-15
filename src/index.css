@@ -152,13 +152,20 @@
   }
 
   html {
-    overflow-y: scroll;
+    overflow: hidden;
   }
-  
-  body {
+
+  body,
+  body[data-scroll-locked][style],
+  [data-radix-scroll-area-viewport] {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+    pointer-events: auto !important;
+    --removed-body-scroll-bar-size: 0px !important;
   }
+
 
   .font-mono {
     font-family: 'JetBrains Mono', monospace;

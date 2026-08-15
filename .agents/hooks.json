@@ -1,0 +1,11 @@
+﻿{
+  "auto-dev-server": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": ".agents/start-dev.bat",
+        "timeout": 10
+      }
+    ]
+  }
+}

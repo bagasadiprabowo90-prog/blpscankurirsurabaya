@@ -443,9 +443,9 @@ const Index = () => {
   }, [activeCategory, toast]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header — nameplate mesin */}
-      <header className="sticky top-0 z-50 bg-[hsl(var(--ink))] text-[hsl(var(--ink-foreground))]">
+      <header className="shrink-0 z-50 bg-[hsl(var(--ink))] text-[hsl(var(--ink-foreground))]">
         <div className="container max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -511,7 +511,7 @@ const Index = () => {
           : `${elapsedSec}s`;
 
         return (
-          <div className="sticky top-[73px] z-40 bg-card/95 backdrop-blur-sm border-b px-4 py-3">
+          <div className="shrink-0 z-40 bg-card/95 backdrop-blur-sm border-b px-4 py-3">
             <div className="container max-w-7xl mx-auto">
               <div className="flex items-center gap-3">
                 <div className="flex-1">
@@ -543,9 +543,9 @@ const Index = () => {
       })()}
 
       {/* Main Content */}
-      <main className="container max-w-7xl mx-auto px-3 sm:px-4 pt-4 sm:pt-5 pb-4 sm:pb-6">
+      <main className="flex-1 flex flex-col min-h-0 container max-w-7xl mx-auto px-3 sm:px-4 pt-4 sm:pt-5 pb-4 sm:pb-5">
         {/* Category Tabs - Full Width at Top */}
-        <div className="mb-3 sm:mb-4">
+        <div className="shrink-0 mb-3 sm:mb-4">
           <CategoryTabs
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
@@ -553,9 +553,9 @@ const Index = () => {
           />
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-3 sm:gap-4">
+        <div className="grid lg:grid-cols-12 gap-3 sm:gap-4 flex-1 min-h-0">
           {/* Left Column - Input & Stats */}
-          <div className="lg:col-span-4 space-y-3 sm:space-y-4">
+          <div className="lg:col-span-4 space-y-3 sm:space-y-4 overflow-y-auto pr-1">
             <ScanInput
               onScan={handleScan}
               onBulkUpload={handleBulkUpload}
@@ -588,7 +588,7 @@ const Index = () => {
           </div>
 
           {/* Right Column - Data Table */}
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 flex flex-col min-h-0">
             <ResiTable
               records={filteredRecords}
               onDelete={handleDelete}
@@ -597,15 +597,6 @@ const Index = () => {
           </div>
         </div>
       </main>
-
-      {/* Footer — strip spesifikasi mesin */}
-      <footer className="border-t-2 border-[hsl(var(--ink)/0.15)] mt-6 sm:mt-8 py-3">
-        <div className="container max-w-7xl mx-auto px-3 sm:px-4">
-          <p className="font-display uppercase tracking-widest text-[11px] sm:text-xs text-muted-foreground text-center">
-            Manual sync ke Google Sheets — dibangun untuk 6.000+ resi/hari — IndexedDB lokal
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };

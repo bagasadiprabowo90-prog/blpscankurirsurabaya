@@ -118,11 +118,15 @@ export async function addBulkResi(resiNumbers: string[], forceCategory?: Courier
   // Get all counters
   const counters: Record<string, number> = {};
   
-  for (const resiNumber of resiNumbers) {
+  for (let i = 0; i < resiNumbers.length; i++) {
+    const resiNumber = resiNumbers[i];
     const trimmed = resiNumber.trim().toUpperCase();
     if (!trimmed) continue;
 
-    const now = Date.now();
+    // Tambahkan index (i) agar setiap resi memiliki timestamp unik yang berurutan.
+    // Jika tidak, bulk upload yang sangat cepat akan menghasilkan timestamp yang persis sama (ms),
+    // sehingga saat diurutkan ulang (reorderRowNumbers), urutannya menjadi acak.
+    const now = Date.now() + i;
     const dateKey = getDateKey(now);
     
     const isDuplicate = existingSet.has(trimmed) || batchSet.has(trimmed);
@@ -324,17 +328,21 @@ export async function importFromJSON(jsonString: string): Promise<{ imported: nu
   
   const tx = db.transaction(['resi', 'counters'], 'readwrite');
   
-  for (const record of data.resi as ResiRecord[]) {
+  for (let i = 0; i < data.resi.length; i++) {
+    const record = data.resi[i] as ResiRecord;
     // Skip if already exists
     if (existingSet.has(record.resi)) {
       skipped++;
       continue;
     }
     
-    // Generate new ID to avoid conflicts
+    // Keep original ID to preserve time-based sorting prefix.
+    // Also add a tiny offset to the timestamp based on array index (i)
+    // just in case the JSON contains records with identical timestamps (from the previous bug).
     const newRecord: ResiRecord = {
       ...record,
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: record.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: record.timestamp + (i * 0.001), // Ensures strictly unique timestamps for stable sorting
     };
     
     tx.objectStore('resi').put(newRecord);

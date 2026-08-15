@@ -122,7 +122,7 @@ export function ActionButtons({
         </Button>
 
         {/* More Options - Dropdown */}
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2 text-foreground">
               <MoreHorizontal className="w-4 h-4" />

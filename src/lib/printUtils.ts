@@ -70,7 +70,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
       <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
       <style>
         @page {
-          size: A4;
+          size: a4 portrait;
           margin: 12mm;
         }
         * { 
@@ -83,6 +83,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           font-size: 11px;
           background: white;
           color: #333;
+          padding: 0 2px; /* Prevent 1px border clipping at the absolute edges */
         }
         .header {
           text-align: center;
@@ -94,8 +95,13 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           font-size: 22px;
           font-weight: bold;
           color: #333;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
           letter-spacing: 1px;
+        }
+        .header .print-date {
+          font-size: 12px;
+          color: #555;
+          margin-bottom: 8px;
         }
         .header .category-badge {
           display: inline-block;
@@ -128,6 +134,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           width: 100%;
           border-collapse: collapse;
           font-size: 10px;
+          table-layout: fixed;
         }
         thead { display: table-header-group; }
         tr { page-break-inside: avoid; }
@@ -154,8 +161,9 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           font-family: 'Courier New', monospace; 
           font-weight: bold;
           font-size: 10px;
+          word-break: break-all;
         }
-        td.waktu { text-align: center; font-size: 9px; white-space: nowrap; }
+        td.waktu { text-align: center; font-size: 9px; white-space: nowrap; width: 60px; }
         tr:nth-child(even) { background: #fafafa; }
 
         .footer {
@@ -199,6 +207,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
     <body>
       <div class="header">
         <h1>BLP BEAUTY SURABAYA</h1>
+        <div class="print-date">${tanggal}</div>
         <div class="category-badge">${categoryName.toUpperCase()}</div>
         <div class="total">Total: ${records.length} Resi</div>
       </div>

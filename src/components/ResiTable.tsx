@@ -40,9 +40,9 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
   }, []);
 
   return (
-    <div className="work-panel">
+    <div className="work-panel flex flex-col h-full min-h-0">
       {/* Header - Desktop (plat gelap ala mesin kasir/ledger) */}
-      <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-[hsl(var(--ink))] font-display uppercase tracking-wider text-xs font-semibold text-[hsl(var(--ink-foreground))]">
+      <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-[hsl(var(--ink))] font-display uppercase tracking-wider text-xs font-semibold text-[hsl(var(--ink-foreground))] shrink-0">
         <div className="col-span-1">No</div>
         <div className="col-span-4">Nomor Resi</div>
         {showCategory && <div className="col-span-2">Kategori</div>}
@@ -54,8 +54,7 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
       {/* Virtual List or Empty State */}
       <div
         ref={parentRef}
-        className="overflow-y-scroll"
-        style={{ height: records.length === 0 ? 300 : Math.min(600, sortedRecords.length * 56 + 20) }}
+        className="overflow-y-auto flex-1 min-h-0 relative"
       >
         {records.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full px-6 text-center text-muted-foreground">
