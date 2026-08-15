@@ -98,10 +98,17 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           margin-bottom: 2px;
           letter-spacing: 1px;
         }
+        .header .header-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 8px;
+        }
         .header .print-date {
           font-size: 12px;
           color: #555;
-          margin-bottom: 8px;
+          flex: 1;
+          text-align: left;
         }
         .header .category-badge {
           display: inline-block;
@@ -111,13 +118,13 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           font-size: 12px;
           font-weight: bold;
           border-radius: 3px;
-          margin-top: 4px;
         }
         .header .total {
           font-size: 13px;
           color: #333;
-          margin-top: 6px;
           font-weight: bold;
+          flex: 1;
+          text-align: right;
         }
 
         .columns {
@@ -207,9 +214,11 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
     <body>
       <div class="header">
         <h1>BLP BEAUTY SURABAYA</h1>
-        <div class="print-date">${tanggal}</div>
-        <div class="category-badge">${categoryName.toUpperCase()}</div>
-        <div class="total">Total: ${records.length} Resi</div>
+        <div class="header-info">
+          <div class="print-date">${tanggal}</div>
+          <div class="category-badge">${categoryName.toUpperCase()}</div>
+          <div class="total">Total: ${records.length} Resi</div>
+        </div>
       </div>
       
       <div class="columns">
