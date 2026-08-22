@@ -1,5 +1,5 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { CourierCategory, detectCategory, tryDetectCategory } from './courierCategories';
+import { CourierCategory, detectCategory, tryDetectCategory, getCategoryConfig } from './courierCategories';
 
 export interface ResiRecord {
   id: string;
@@ -74,13 +74,25 @@ export async function addResi(resiNumber: string, forceCategory?: CourierCategor
   // Use auto-detect first
   const detected = tryDetectCategory(trimmed);
   
-  // Strict matching: if user is in a specific tab (forceCategory) and the scanned resi strictly belongs to another tab, reject it.
+  // Strict matching: if user is in a specific tab (forceCategory) and the scanned resi
+  // strictly belongs to another tab, reject it.
   if (forceCategory && detected && detected !== forceCategory) {
     return { record: null, isDuplicate: false, isWrongCategory: true, detectedCategory: detected };
   }
   
-  const category = detected || forceCategory || 'spare';
+  // Keamanan tambahan: jika tab aktif punya aturan ketat (requiresPrefix / digitsOnly)
+  // dan resi tidak berhasil dideteksi oleh auto-detect (detected=null),
+  // maka resi ini TIDAK boleh diterima begitu saja — tolak.
+  if (forceCategory && detected === null) {
+    const forcedConfig = getCategoryConfig(forceCategory);
+    const isStrictTab = forcedConfig.requiresPrefix || forcedConfig.digitsOnly;
+    if (isStrictTab && forceCategory !== 'spare') {
+      return { record: null, isDuplicate: false, isWrongCategory: true, detectedCategory: null };
+    }
+  }
   
+  const category = detected || forceCategory || 'spare';
+
   // Get current count for category
   const counterKey = `${category}|${dateKey}`;
   const counter = await db.get('counters', counterKey);
@@ -142,6 +154,16 @@ export async function addBulkResi(resiNumbers: string[], forceCategory?: Courier
     if (forceCategory && detected && detected !== forceCategory) {
       rejected++;
       continue;
+    }
+    
+    // Keamanan tambahan: jika tab aktif ketat dan resi tidak terdeteksi, tolak
+    if (forceCategory && detected === null) {
+      const forcedConfig = getCategoryConfig(forceCategory);
+      const isStrictTab = forcedConfig.requiresPrefix || forcedConfig.digitsOnly;
+      if (isStrictTab && forceCategory !== 'spare') {
+        rejected++;
+        continue;
+      }
     }
     
     const category = detected || forceCategory || 'spare';
