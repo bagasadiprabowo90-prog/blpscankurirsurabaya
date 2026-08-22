@@ -54,7 +54,7 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
     patterns: [],
     color: 'hsl(270, 60%, 75%)',  // ungu pastel
     bgClass: 'category-anteraja',
-    exactLength: 17,              // tepat 17 digit angka
+    exactLength: 14,              // tepat 14 digit angka, contoh: 11004245411584
     digitsOnly: true,             // hanya angka, tanpa huruf sama sekali
   },
   {
