@@ -10,8 +10,7 @@ interface CategoryTabsProps {
 
 const DISPLAY_NAMES: Record<string, string> = {
   'shopee': 'Shopee',
-  'jnt': 'J&T',
-  'goto': 'GoTo',
+  'anteraja': 'Anteraja',
   'jne': 'JNE',
   'instan-sameday': 'Instan',
   'spare': 'Lainnya',

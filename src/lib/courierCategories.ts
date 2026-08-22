@@ -1,7 +1,6 @@
 export type CourierCategory = 
   | 'shopee'
-  | 'jnt'
-  | 'goto'
+  | 'anteraja'
   | 'jne'
   | 'instan-sameday'
   | 'spare';
@@ -16,6 +15,10 @@ export interface CategoryConfig {
   bgClass: string;
   // Strict length validation (jika diisi, resi harus pas panjangnya)
   exactLength?: number;
+  // Jika true, resi WAJIB dimulai dengan salah satu prefix (tidak bisa lolos tanpa prefix)
+  requiresPrefix?: boolean;
+  // Jika true, resi hanya boleh berisi digit angka (setelah prefix)
+  digitsOnly?: boolean;
   // Hint untuk placeholder input
   lengthHint?: string;
 }
@@ -30,24 +33,7 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
     color: 'hsl(16, 100%, 50%)',
     bgClass: 'category-shopee',
     exactLength: 17,           // SPXID(5) + 12 digit, contoh: SPXID060808603278
-  },
-  {
-    id: 'jnt',
-    name: 'J&T Express',
-    shortName: 'JNT',
-    prefixes: ['JP', 'JX', 'JD', 'JZ', 'JO'],
-    patterns: [],
-    color: 'hsl(0, 84%, 50%)',
-    bgClass: 'category-jnt',
-  },
-  {
-    id: 'goto',
-    name: 'GOTO',
-    shortName: 'GOTO',
-    prefixes: ['GOTO'],
-    patterns: [],
-    color: 'hsl(142, 70%, 40%)',
-    bgClass: 'category-goto',
+    requiresPrefix: true,
   },
   {
     id: 'jne',
@@ -58,6 +44,18 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
     color: 'hsl(262, 83%, 58%)',
     bgClass: 'category-jne',
     exactLength: 13,           // CM(2) + 11 digit, contoh: CM16861561115
+    requiresPrefix: true,
+  },
+  {
+    id: 'anteraja',
+    name: 'Anteraja',
+    shortName: 'ATJ',
+    prefixes: [],              // tidak ada prefix — hanya 17 digit angka murni
+    patterns: [],
+    color: 'hsl(270, 60%, 75%)',  // ungu pastel
+    bgClass: 'category-anteraja',
+    exactLength: 17,              // tepat 17 digit angka
+    digitsOnly: true,             // hanya angka, tanpa huruf sama sekali
   },
   {
     id: 'instan-sameday',
@@ -82,7 +80,11 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
 
 /**
  * Mencoba mendeteksi kategori dari nomor resi.
- * Jika kategori punya exactLength, panjang resi HARUS pas — jika tidak, tidak cocok.
+ * Validasi ketat:
+ * - Kategori dengan requiresPrefix=true: WAJIB cocok prefix, dan panjang harus pas (jika ada exactLength).
+ * - Kategori Anteraja (digitsOnly=true): 17 digit angka murni.
+ * - Kategori pattern-based (Instan): cek pattern + exactLength.
+ * - Prefix yang cocok tapi panjang salah → return 'invalid' signal (null) agar ditolak.
  */
 export function tryDetectCategory(resi: string): CourierCategory | null {
   const trimmed = resi.trim().toUpperCase();
@@ -90,34 +92,49 @@ export function tryDetectCategory(resi: string): CourierCategory | null {
   for (const category of COURIER_CATEGORIES) {
     if (category.id === 'spare') continue;
     
-    // Cek prefix dulu
-    let matchedByPrefix = false;
-    for (const prefix of category.prefixes) {
-      if (trimmed.startsWith(prefix)) {
-        matchedByPrefix = true;
-        break;
-      }
-    }
-    
-    if (matchedByPrefix) {
-      // Jika ada aturan panjang, validasi panjang juga
-      if (category.exactLength !== undefined && trimmed.length !== category.exactLength) {
-        // Prefix cocok tapi panjang belum pas — tolak (masuk ke spare)
-        return null;
-      }
-      return category.id;
-    }
-    
-    // Cek pattern (hanya untuk yang tidak pakai prefix, mis. INSTAN)
-    if (category.prefixes.length === 0) {
-      for (const pattern of category.patterns) {
-        if (pattern.test(trimmed)) {
-          // Validasi panjang jika ada
-          if (category.exactLength !== undefined && trimmed.length !== category.exactLength) {
-            continue;
-          }
-          return category.id;
+    // === Kategori berbasis PREFIX ===
+    if (category.prefixes.length > 0) {
+      let matchedByPrefix = false;
+      for (const prefix of category.prefixes) {
+        if (trimmed.startsWith(prefix)) {
+          matchedByPrefix = true;
+          break;
         }
+      }
+      
+      if (matchedByPrefix) {
+        // Prefix cocok → validasi panjang jika ada
+        if (category.exactLength !== undefined && trimmed.length !== category.exactLength) {
+          // Prefix cocok tapi panjang belum pas — tolak keras (return null agar tidak diterima tab manapun)
+          return null;
+        }
+        return category.id;
+      }
+      
+      // Prefix tidak cocok → skip (jangan cek pattern)
+      continue;
+    }
+    
+    // === Kategori Anteraja: 17 digit angka murni (digitsOnly, tanpa prefix) ===
+    if (category.digitsOnly) {
+      const isAllDigits = /^\d+$/.test(trimmed);
+      if (isAllDigits) {
+        if (category.exactLength !== undefined && trimmed.length !== category.exactLength) {
+          continue; // panjang tidak pas, lanjut ke kategori berikutnya
+        }
+        return category.id;
+      }
+      continue;
+    }
+    
+    // === Kategori berbasis PATTERN (mis. Instan) ===
+    for (const pattern of category.patterns) {
+      if (pattern.test(trimmed)) {
+        // Validasi panjang jika ada
+        if (category.exactLength !== undefined && trimmed.length !== category.exactLength) {
+          continue;
+        }
+        return category.id;
       }
     }
   }

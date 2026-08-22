@@ -37,8 +37,7 @@ function formatDateTime(timestamp: number): string {
 // Mapping kategori aplikasi ke nama sheet di Google Sheets
 const CATEGORY_TO_SHEET_NAME: Record<CourierCategory, string> = {
   'shopee': 'SHOPEE',
-  'jnt': 'J&T',
-  'goto': 'GOTO',
+  'anteraja': 'ANTERAJA',
   'jne': 'JNE',
   'instan-sameday': 'INSTAN',
   'spare': 'LAINNYA',
