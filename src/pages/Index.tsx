@@ -45,6 +45,9 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{ synced: number; total: number; startTime: number } | null>(null);
   const activeCategoryRef = useRef(activeCategory);
+  // Sync lock: ref update synchronous (tidak tunggu React re-render seperti setState)
+  // Ini mencegah double-sync jika user klik cepat 2x atau ada race condition
+  const syncInProgressRef = useRef(false);
   const { toast } = useToast();
 
   // Keep ref in sync for use in callbacks
@@ -293,6 +296,15 @@ const Index = () => {
 
   // Handle sync to Google Sheets
   const runGoogleSheetsSync = useCallback(async (mode: 'normal' | 'force') => {
+    // ✅ Guard: cegah double-sync. Ref update synchronous, tidak perlu tunggu re-render.
+    if (syncInProgressRef.current) {
+      toast({
+        title: '⏳ Sync Sedang Berjalan',
+        description: 'Tunggu proses sync selesai sebelum menjalankan sync lagi.',
+      });
+      return;
+    }
+    syncInProgressRef.current = true;
     setIsLoading(true);
     const startTime = Date.now();
     setSyncProgress({ synced: 0, total: 0, startTime });
@@ -375,6 +387,7 @@ const Index = () => {
         variant: 'destructive',
       });
     } finally {
+      syncInProgressRef.current = false; // ✅ Selalu reset lock di finally
       setIsLoading(false);
       setSyncProgress(null);
     }
