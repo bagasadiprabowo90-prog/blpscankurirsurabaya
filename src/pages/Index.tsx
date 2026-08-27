@@ -22,7 +22,7 @@ import {
 import { CourierCategory, COURIER_CATEGORIES } from '@/lib/courierCategories';
 import { soundManager } from '@/lib/soundManager';
 import { exportToExcel } from '@/lib/excelExport';
-import { syncToGoogleSheets } from '@/lib/googleSheetsSync';
+import { syncToGoogleSheets, getGoogleSheetsUrl, runSyncDiagnostics } from '@/lib/googleSheetsSync';
 import { printReport } from '@/lib/printUtils';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
@@ -304,19 +304,29 @@ const Index = () => {
       // Kalau semua sudah ditandai synced tapi sheet masih kosong, offer force sync
       if (!force && unsyncedRecords.length === 0) {
         toast({
-          title: 'Sudah ditandai tersinkron',
+          title: 'Semua sudah tersinkron',
           description:
-            'Di HP ini semua data sudah ditandai “synced”. Jika Google Sheets masih kosong, klik Sync Ulang Semua.',
+            'Semua data sudah ditandai synced. Jika Google Sheets masih kosong, klik "Sync Ulang" untuk kirim ulang semua data.',
           action: (
             <ToastAction altText="Sync ulang semua" onClick={() => runGoogleSheetsSync('force')}>
-              Sync Ulang
+              Sync Ulang Semua
             </ToastAction>
           ),
         });
+        setIsLoading(false);
+        setSyncProgress(null);
         return;
       }
 
       const targetRecords = force ? records : unsyncedRecords;
+
+      console.log(`[Index] Sync mode: ${mode}, targetRecords: ${targetRecords.length}`);
+      const categoryCount = targetRecords.reduce((acc, r) => {
+        acc[r.category] = (acc[r.category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      console.log('[Index] Category breakdown:', categoryCount);
+
       const result = await syncToGoogleSheets(
         targetRecords,
         (synced, total) => {
@@ -325,23 +335,42 @@ const Index = () => {
         { force }
       );
 
-      if (result.success && result.syncedCount && result.syncedCount > 0) {
+      // Mark as synced jika berhasil (cek success, tidak tergantung syncedCount > 0)
+      if (result.success && targetRecords.length > 0) {
         const syncedIds = targetRecords.map(r => r.id);
         await markAsSynced(syncedIds);
         setRecords(prev => prev.map(r => (syncedIds.includes(r.id) ? { ...r, syncedToSheet: true } : r)));
       }
 
-      toast({
-        title: result.success ? 'Sync Terkirim' : 'Sync',
-        description: result.success 
-          ? `${result.syncedCount} resi dikirim. Cek Google Sheets untuk konfirmasi.`
-          : result.message,
-        variant: result.success ? 'default' : 'destructive',
-      });
+      if (result.success) {
+        // Buat deskripsi dengan breakdown per sheet
+        let desc = `${result.syncedCount ?? targetRecords.length} resi dikirim.`;
+        if (result.detail && Object.keys(result.detail).length > 0) {
+          const breakdown = Object.entries(result.detail)
+            .map(([sheet, count]) => `${sheet}:${count}`)
+            .join(', ');
+          desc += ` (${breakdown})`;
+        }
+        toast({
+          title: '✅ Sync Berhasil',
+          description: desc,
+          action: (
+            <ToastAction altText="Buka sheet" onClick={() => window.open(getGoogleSheetsUrl(), '_blank')}>
+              Buka Sheet
+            </ToastAction>
+          ),
+        });
+      } else {
+        toast({
+          title: '❌ Sync Gagal',
+          description: result.message,
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('Error syncing:', error);
       toast({
-        title: 'Sync Gagal',
+        title: '❌ Sync Gagal',
         description: error instanceof Error ? error.message : 'Terjadi kesalahan saat sync',
         variant: 'destructive',
       });
@@ -354,6 +383,71 @@ const Index = () => {
   const handleSyncGoogleSheets = useCallback(async () => {
     await runGoogleSheetsSync('normal');
   }, [runGoogleSheetsSync]);
+
+  const handleForceSyncGoogleSheets = useCallback(async () => {
+    await runGoogleSheetsSync('force');
+  }, [runGoogleSheetsSync]);
+
+  // Handle diagnostics sync
+  const handleDiagnostics = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      toast({ title: '🔍 Menjalankan Diagnostik...', description: 'Mengecek kondisi Google Sheets & Apps Script' });
+      const result = await runSyncDiagnostics();
+      
+      console.log('[Diagnostics] Full result:', result);
+
+      if (!result.success) {
+        toast({
+          title: '❌ Diagnostik Gagal',
+          description: result.errorMessage || 'Tidak dapat terhubung ke Apps Script',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const sheetsFound = result.sheetNames || [];
+      const missing = result.missingSheets || [];
+      const lastNums = result.lastNumbers || {};
+
+      // Cek apakah ANTERAJA ditemukan
+      const anterajaFound = sheetsFound.some(s => s.toUpperCase() === 'ANTERAJA');
+      const anterajaLastNum = lastNums['ANTERAJA'] ?? lastNums['anteraja'] ?? 'N/A';
+
+      if (missing.length > 0) {
+        toast({
+          title: '⚠️ Sheet Tidak Ditemukan!',
+          description: `Sheet HILANG: ${missing.join(', ')}. Sheet ada: ${sheetsFound.join(', ') || 'kosong'}. Cek Console (F12) untuk detail.`,
+          variant: 'destructive',
+        });
+      } else if (!anterajaFound) {
+        toast({
+          title: '⚠️ ANTERAJA Tidak Terdeteksi',
+          description: `Sheet terbaca: ${sheetsFound.join(', ') || '(kosong)'}. ANTERAJA tidak ada — tambahkan tab "ANTERAJA" di spreadsheet!`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: '✅ Diagnostik OK',
+          description: `ANTERAJA ditemukan (row terakhir: ${anterajaLastNum}). Semua sheet: ${sheetsFound.join(', ')}. Cek Console untuk detail.`,
+          action: (
+            <ToastAction altText="Buka sheet" onClick={() => window.open(getGoogleSheetsUrl(), '_blank')}>
+              Buka Sheet
+            </ToastAction>
+          ),
+        });
+      }
+    } catch (error) {
+      console.error('Error diagnostics:', error);
+      toast({
+        title: '❌ Diagnostik Error',
+        description: error instanceof Error ? error.message : 'Error tidak diketahui',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   // Handle print report
   const handlePrintReport = useCallback(() => {
@@ -465,6 +559,8 @@ const Index = () => {
               <ActionButtons
                 onExportExcel={handleExportExcel}
                 onSyncGoogleSheets={handleSyncGoogleSheets}
+                onForceSyncGoogleSheets={handleForceSyncGoogleSheets}
+                onDiagnostics={handleDiagnostics}
                 onDeleteDuplicates={handleDeleteDuplicates}
                 onReset={handleReset}
                 onPrintReport={handlePrintReport}

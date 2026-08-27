@@ -26,11 +26,15 @@ import {
   Printer,
   Download,
   Upload,
+  RefreshCcw,
+  Activity,
 } from 'lucide-react';
 
 interface ActionButtonsProps {
   onExportExcel: () => void;
   onSyncGoogleSheets: () => void;
+  onForceSyncGoogleSheets: () => void;
+  onDiagnostics: () => void;
   onDeleteDuplicates: () => void;
   onReset: () => void;
   onPrintReport: () => void;
@@ -45,6 +49,8 @@ interface ActionButtonsProps {
 export function ActionButtons({
   onExportExcel,
   onSyncGoogleSheets,
+  onForceSyncGoogleSheets,
+  onDiagnostics,
   onDeleteDuplicates,
   onReset,
   onPrintReport,
@@ -136,6 +142,15 @@ export function ActionButtons({
             <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
               <Upload className="w-4 h-4 mr-2" />
               Restore (Import JSON)
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onForceSyncGoogleSheets} disabled={isLoading}>
+              <RefreshCcw className="w-4 h-4 mr-2" />
+              Sync Ulang Semua ke Sheet
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onDiagnostics} disabled={isLoading}>
+              <Activity className="w-4 h-4 mr-2" />
+              Diagnostik Sync (Debug)
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
