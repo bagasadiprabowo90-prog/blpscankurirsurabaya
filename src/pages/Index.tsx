@@ -30,7 +30,7 @@ import { useScanQueue } from '@/hooks/useScanQueue';
 import { useGlobalScanCapture } from '@/hooks/useGlobalScanCapture';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { FlaskConical, Clock, UploadCloud } from 'lucide-react';
+import { FlaskConical, UploadCloud } from 'lucide-react';
 
 
 const Index = () => {
@@ -589,67 +589,47 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Sync Progress Bar */}
-      {syncProgress && syncProgress.total > 0 && (() => {
-        const percentage = Math.round((syncProgress.synced / syncProgress.total) * 100);
-        const elapsedMs = Date.now() - syncProgress.startTime;
-        const elapsedSec = Math.floor(elapsedMs / 1000);
-        
-        // Calculate estimated time remaining
-        let etaText = "Menghitung...";
-        if (syncProgress.synced > 0) {
-          const msPerItem = elapsedMs / syncProgress.synced;
-          const remainingItems = syncProgress.total - syncProgress.synced;
-          const remainingMs = msPerItem * remainingItems;
-          const remainingSec = Math.ceil(remainingMs / 1000);
-          
-          if (remainingSec < 60) {
-            etaText = `~${remainingSec} detik lagi`;
-          } else {
-            const mins = Math.floor(remainingSec / 60);
-            const secs = remainingSec % 60;
-            etaText = `~${mins}m ${secs}s lagi`;
-          }
-        }
-        
-        // Format elapsed time
-        const elapsedMin = Math.floor(elapsedSec / 60);
-        const elapsedSecRemainder = elapsedSec % 60;
-        const elapsedText = elapsedMin > 0 
-          ? `${elapsedMin}m ${elapsedSecRemainder}s` 
-          : `${elapsedSec}s`;
 
-        return (
-          <div className="shrink-0 z-40 bg-card/95 backdrop-blur-sm border-b px-4 py-3">
-            <div className="container max-w-7xl mx-auto">
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <Progress 
-                    value={percentage} 
-                    className="h-3"
-                  />
-                </div>
-                <span className="text-sm font-bold text-foreground whitespace-nowrap">
-                  {percentage}%
-                </span>
-              </div>
-              <div className="tabular flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5">
-                  <UploadCloud className="h-3.5 w-3.5" />
-                  {syncProgress.synced.toLocaleString()}/{syncProgress.total.toLocaleString()} resi
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
-                  {elapsedText} • {etaText}
-                </span>
-              </div>
-              <p className="text-xs text-primary font-medium mt-1">
-                Mengirim ke Google Sheets…
+      {/* Sync Progress Popup — bottom right, bergaya toast */}
+      {syncProgress && (
+        <div
+          className="fixed bottom-4 right-4 z-[110] w-[340px] rounded-md border bg-background shadow-xl"
+          style={{
+            animation: 'slide-in-from-bottom 0.2s ease-out',
+          }}
+        >
+          {/* Header popup */}
+          <div className="flex items-center gap-2.5 px-4 pt-4 pb-2">
+            <UploadCloud className="h-4 w-4 text-primary shrink-0 animate-pulse" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold leading-tight">Mengirim ke Google Sheets...</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {syncProgress.total.toLocaleString()} resi
               </p>
             </div>
           </div>
-        );
-      })()}
+
+          {/* Indeterminate progress bar — shimmer animasi */}
+          <div className="px-4 pb-4">
+            <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="absolute inset-y-0 rounded-full bg-primary"
+                style={{
+                  width: '40%',
+                  animation: 'sync-shimmer 1.4s ease-in-out infinite',
+                }}
+              />
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes sync-shimmer {
+              0%   { left: -40%; }
+              100% { left: 100%; }
+            }
+          `}</style>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-0 container max-w-7xl mx-auto px-3 sm:px-4 pt-4 sm:pt-5 pb-4 sm:pb-5">
