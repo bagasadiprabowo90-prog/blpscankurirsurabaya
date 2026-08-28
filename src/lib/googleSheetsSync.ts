@@ -194,67 +194,56 @@ export async function runSyncDiagnostics(): Promise<DiagnosticsResult> {
   }
 }
 
-// Batch size untuk sync (100 record per batch - lebih aman untuk Apps Script)
-const BATCH_SIZE = 100;
-
-// Jumlah batch yang dikirim paralel sekaligus (dikurangi supaya tidak timeout)
-const PARALLEL_BATCHES = 3;
-
-// Kirim satu batch dengan retry
+// Kirim request ke Apps Script dengan retry (exponential backoff)
 async function sendWithRetry(
   payload: object,
   maxRetries = 3,
-  batchLabel = 'batch'
+  label = 'Sync'
 ): Promise<{ success: boolean; result: any }> {
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`[Sync] ${batchLabel} - attempt ${attempt}/${maxRetries}`);
+      console.log(`[Sync] ${label} - attempt ${attempt}/${maxRetries}`);
 
       const response = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'text/plain', // Apps Script butuh text/plain agar tidak pre-flight OPTIONS gagal
+          'Content-Type': 'text/plain', // Apps Script butuh text/plain agar tidak ada preflight OPTIONS
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errText = await response.text().catch(() => 'no body');
-        console.error(`[Sync] HTTP ${response.status}:`, errText.slice(0, 300));
         throw new Error(`HTTP ${response.status}: ${errText.slice(0, 200)}`);
       }
 
       const text = await response.text();
-      console.log(`[Sync] Raw response (${batchLabel}):`, text.slice(0, 500));
+      console.log(`[Sync] Response:`, text.slice(0, 500));
 
       let result: any = null;
       try {
         result = JSON.parse(text);
       } catch {
-        // Apps Script kadang return HTML error page — tangkap ini
         if (text.toLowerCase().includes('error') || text.toLowerCase().includes('exception')) {
           throw new Error(`Apps Script error: ${text.slice(0, 300)}`);
         }
-        // Jika tidak ada JSON tapi response 200, anggap sukses
-        result = { success: true, message: 'OK (non-JSON response)' };
+        result = { success: true };
       }
 
       if (result && result.success === false) {
-        throw new Error(result.message || result.error || 'Apps Script melaporkan error');
+        throw new Error(result.message || result.error || 'Apps Script error');
       }
 
       return { success: true, result };
 
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      console.warn(`[Sync] ${batchLabel} attempt ${attempt} failed:`, lastError.message);
+      console.warn(`[Sync] Attempt ${attempt} failed:`, lastError.message);
 
       if (attempt < maxRetries) {
-        // Exponential backoff: 500ms, 1500ms, 4500ms
-        const delayMs = 500 * Math.pow(3, attempt - 1);
-        console.log(`[Sync] Retrying in ${delayMs}ms...`);
+        const delayMs = 500 * Math.pow(3, attempt - 1); // 500ms, 1.5s, 4.5s
         await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
@@ -263,38 +252,8 @@ async function sendWithRetry(
   throw lastError || new Error('All retries failed');
 }
 
-// Sync satu batch ke Google Sheets
-async function syncBatch(
-  records: ResiRecord[],
-  options?: { force?: boolean; triggerSort?: boolean; batchIndex?: number; totalBatches?: number }
-): Promise<boolean> {
-  const dataToSync = prepareDataForSync(records);
-
-  // Skip jika tidak ada data
-  if (Object.keys(dataToSync).length === 0) return true;
-
-  const batchLabel = `Batch ${(options?.batchIndex ?? 0) + 1}/${options?.totalBatches ?? '?'}`;
-
-  const payload = {
-    records: dataToSync,
-    timestamp: new Date().toISOString(),
-    triggerSort: options?.triggerSort || false,
-    batchInfo: batchLabel,
-  };
-
-  // Log detail per kategori
-  const categorySummary = Object.entries(dataToSync).map(([k, v]) => {
-    const arr = v as any[];
-    return `${k}:${arr.length} (resi:${arr.map(r => r.resi).slice(0, 3).join(',')})`;
-  });
-  console.log(`[Sync] ${batchLabel} - Sending:`, categorySummary.join(' | '));
-
-  const { result } = await sendWithRetry(payload, 3, batchLabel);
-  console.log(`[Sync] ${batchLabel} - Success:`, result);
-  return true;
-}
-
-// Sync data ke Google Sheets via Apps Script (dengan batching per kategori)
+// Sync data ke Google Sheets — SINGLE REQUEST, tidak ada batching
+// Semua record dikirim sekaligus dalam 1 HTTP request → 1 Apps Script call → paling cepat
 export async function syncToGoogleSheets(
   records: ResiRecord[],
   onProgress?: (synced: number, total: number) => void,
@@ -313,51 +272,38 @@ export async function syncToGoogleSheets(
     }
 
     const totalRecords = recordsToSync.length;
-    let syncedCount = 0;
 
-    // Log breakdown per kategori SEBELUM sync untuk diagnosis
+    // Breakdown per sheet untuk logging dan response
     const categoryBreakdown: Record<string, number> = {};
     for (const r of recordsToSync) {
       const sheetName = CATEGORY_TO_SHEET_NAME[r.category] || 'LAINNYA';
       categoryBreakdown[sheetName] = (categoryBreakdown[sheetName] || 0) + 1;
     }
-    console.log('[Sync] Total records to sync:', totalRecords);
-    console.log('[Sync] Per-sheet breakdown:', categoryBreakdown);
+    console.log('[Sync] Records to sync:', totalRecords, '| Breakdown:', categoryBreakdown);
 
-    // Buat semua batch
-    const batches: ResiRecord[][] = [];
-    for (let i = 0; i < totalRecords; i += BATCH_SIZE) {
-      batches.push(recordsToSync.slice(i, i + BATCH_SIZE));
+    // Siapkan semua data sekaligus (sudah sorted by timestamp di prepareDataForSync)
+    const dataToSync = prepareDataForSync(recordsToSync);
+
+    if (Object.keys(dataToSync).length === 0) {
+      return { success: true, message: 'Tidak ada data baru', syncedCount: 0 };
     }
 
-    console.log(`[Sync] Total batches: ${batches.length}, BATCH_SIZE: ${BATCH_SIZE}, PARALLEL: ${PARALLEL_BATCHES}`);
+    // Satu payload, satu request, selesai
+    const payload = {
+      records: dataToSync,
+      timestamp: new Date().toISOString(),
+      triggerSort: true, // selalu sort karena ini satu-satunya request
+    };
 
-    // Kirim batch secara paralel (PARALLEL_BATCHES sekaligus)
-    for (let i = 0; i < batches.length; i += PARALLEL_BATCHES) {
-      const parallelBatches = batches.slice(i, i + PARALLEL_BATCHES);
-      const isLastGroup = i + PARALLEL_BATCHES >= batches.length;
+    // Update progress ke 0 (mulai)
+    onProgress?.(0, totalRecords);
 
-      // Kirim semua batch dalam grup ini secara paralel
-      await Promise.all(parallelBatches.map((batch, idx) => {
-        const batchIndex = i + idx;
-        const isLastBatch = isLastGroup && idx === parallelBatches.length - 1;
-        return syncBatch(batch, {
-          force: options?.force,
-          triggerSort: isLastBatch, // Hanya batch terakhir yang trigger sort
-          batchIndex,
-          totalBatches: batches.length,
-        });
-      }));
+    const { result } = await sendWithRetry(payload, 3, `Sync ${totalRecords} resi`);
 
-      // Update progress
-      syncedCount += parallelBatches.reduce((sum, batch) => sum + batch.length, 0);
-      onProgress?.(syncedCount, totalRecords);
+    console.log('[Sync] Done:', result);
 
-      // Delay antar grup batch
-      if (!isLastGroup) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
+    // Update progress ke 100% setelah selesai
+    onProgress?.(totalRecords, totalRecords);
 
     return {
       success: true,
