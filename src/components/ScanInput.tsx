@@ -29,8 +29,8 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
   const inputRef = useRef<HTMLInputElement>(null);
   const [shake, setShake] = useState(false);
 
-  const activeCourierInfo = activeCategory 
-    ? COURIER_CATEGORIES.find(c => c.id === activeCategory) 
+  const activeCourierInfo = activeCategory
+    ? COURIER_CATEGORIES.find(c => c.id === activeCategory)
     : null;
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
     // Auto-focus input for barcode scanner
     inputRef.current?.focus();
     inputFocused = true;
-    
+
     return () => {
       inputFocused = false;
     };
@@ -73,7 +73,7 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
       .split(/[\n\r,;]+/)
       .map(line => line.trim())
       .filter(line => line.length > 0);
-    
+
     if (lines.length > 0) {
       onBulkUpload(lines);
       setBulkValue('');
@@ -112,7 +112,7 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
           className="px-4 pt-4 pb-3 border-b-2 border-[hsl(var(--ink)/0.08)]"
           style={{ backgroundColor: `color-mix(in srgb, ${accentColor} 8%, transparent)` }}
         >
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-h-[40px]">
             {/* Status indicator */}
             {lastResult?.isDuplicate ? (
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border-2 border-destructive bg-destructive/10">
@@ -127,37 +127,43 @@ export function ScanInput({ onScan, onBulkUpload, disabled, lastResult, activeCa
             )}
 
             {/* Judul + subtitle */}
-            <div className="min-w-0 flex-1">
-              <h2 className="font-display uppercase text-base font-bold leading-none">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <h2 className="font-display uppercase text-base font-bold leading-none truncate">
                 {activeCourierInfo ? `Scan ${activeCourierInfo.name}` : 'Scan Resi'}
               </h2>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground leading-none">
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground leading-none whitespace-nowrap">
                 {bulkMode ? 'paste banyak resi sekaligus' : 'scan barcode atau ketik manual'}
               </p>
             </div>
 
-            {/* Counter antrian & terscan */}
-            {(queueLength > 0 || processedCount > 0) && (
-              <div className="flex items-center gap-1.5 text-xs shrink-0">
-                {queueLength > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-warning/50 bg-warning/15 px-2 py-1 font-bold tabular-nums">
-                    <Clock className="h-3 w-3" />
-                    {queueLength}
-                  </span>
-                )}
-                {processedCount > 0 && (
-                  <button
-                    onClick={onResetCount}
-                    className="inline-flex items-center gap-1 rounded-lg border border-success/40 bg-success/10 px-2 py-1 font-bold text-success transition-colors duration-100 hover:bg-success/20 cursor-pointer tabular-nums"
-                    title="Klik untuk reset counter"
-                  >
-                    <Check className="h-3 w-3" />
-                    {processedCount}
-                    <X className="h-3 w-3 opacity-50" />
-                  </button>
-                )}
-              </div>
-            )}
+            {/* Counter antrian & terscan — pakai invisible placeholder agar layout tidak geser */}
+            <div className="flex items-center gap-1.5 text-xs shrink-0">
+              {queueLength > 0 ? (
+                <span className="inline-flex items-center gap-1 rounded-lg border border-warning/50 bg-warning/15 px-2 py-1 font-bold tabular-nums">
+                  <Clock className="h-3 w-3" />
+                  {queueLength}
+                </span>
+              ) : (
+                <span className="invisible inline-flex items-center gap-1 px-2 py-1 font-bold tabular-nums">
+                  <Clock className="h-3 w-3" />0
+                </span>
+              )}
+              {processedCount > 0 ? (
+                <button
+                  onClick={onResetCount}
+                  className="inline-flex items-center gap-1 rounded-lg border border-success/40 bg-success/10 px-2 py-1 font-bold text-success transition-colors duration-100 hover:bg-success/20 cursor-pointer tabular-nums"
+                  title="Klik untuk reset counter"
+                >
+                  <Check className="h-3 w-3" />
+                  {processedCount}
+                  <X className="h-3 w-3 opacity-50" />
+                </button>
+              ) : (
+                <span className="invisible inline-flex items-center gap-1 px-2 py-1 font-bold tabular-nums">
+                  <Check className="h-3 w-3" />0
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
