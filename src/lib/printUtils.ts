@@ -13,7 +13,9 @@ function formatRecord(record: ResiRecord) {
 }
 
 function buildTableHtml(records: ResiRecord[], startIndex: number): string {
-  if (records.length === 0) return '';
+  if (records.length === 0) {
+    return '<table><thead><tr><th class="no">NO</th><th class="resi">NOMOR RESI</th><th class="waktu">WAKTU</th></tr></thead><tbody><tr><td colspan="3" style="text-align: center; padding: 10px; color: #888;">-</td></tr></tbody></table>';
+  }
   
   let rows = '';
   records.forEach((record, i) => {
@@ -53,183 +55,36 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
     minute: '2-digit',
   });
 
-  // Split records into left and right columns
-  const half = Math.ceil(records.length / 2);
-  const leftRecords = records.slice(0, half);
-  const rightRecords = records.slice(half);
+  // Tepat 51 baris per kolom (maksimal 102 resi per lembar A4).
+  // Kolom kiri diisi sampai 51 baris (nomor 1 s/d 51) dengan tinggi yang memanjang proporsional sampai bawah kertas.
+  const MAX_PER_COLUMN = 51;
+  const MAX_PER_PAGE = MAX_PER_COLUMN * 2; // 102 resi per halaman
+  
+  const pagesData: ResiRecord[][] = [];
+  if (records.length === 0) {
+    pagesData.push([]);
+  } else {
+    for (let i = 0; i < records.length; i += MAX_PER_PAGE) {
+      pagesData.push(records.slice(i, i + MAX_PER_PAGE));
+    }
+  }
 
-  const leftTable = buildTableHtml(leftRecords, 0);
-  const rightTable = buildTableHtml(rightRecords, half);
+  const totalPages = pagesData.length;
+  let globalStartIndex = 0;
 
-  const printContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Laporan Resi - ${categoryName}</title>
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-      <style>
-        @page {
-          size: a4 portrait;
-          margin: 12mm;
-        }
-        * { 
-          box-sizing: border-box; 
-          margin: 0; 
-          padding: 0; 
-        }
-        body {
-          font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          font-size: 11px;
-          background: white;
-          color: #333;
-          padding: 0 2px; /* Prevent 1px border clipping at the absolute edges */
-        }
-        .header {
-          text-align: center;
-          padding-bottom: 12px;
-          border-bottom: 2px solid #333;
-          margin-bottom: 12px;
-        }
-        .header h1 {
-          font-size: 22px;
-          font-weight: bold;
-          color: #333;
-          margin-bottom: 2px;
-          letter-spacing: 1px;
-        }
-        .header .header-info {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: 8px;
-        }
-        .header .print-date {
-          font-size: 12px;
-          color: #555;
-          flex: 1;
-          text-align: left;
-        }
-        .header .category-badge {
-          display: inline-block;
-          background: ${categoryColor};
-          color: white;
-          padding: 4px 16px;
-          font-size: 12px;
-          font-weight: bold;
-          border-radius: 3px;
-        }
-        .header .total {
-          font-size: 13px;
-          color: #333;
-          font-weight: bold;
-          flex: 1;
-          text-align: right;
-        }
+  const pagesHtml = pagesData.map((pageRecords, pageIdx) => {
+    const isLastPage = pageIdx === totalPages - 1;
+    const pageStartIndex = globalStartIndex;
+    globalStartIndex += pageRecords.length;
 
-        .columns {
-          display: flex;
-          gap: 12px;
-          width: 100%;
-        }
-        .column {
-          flex: 1;
-          min-width: 0;
-        }
+    // Kolom kiri diisi sampai maksimal 51 data, sisanya masuk ke kolom kanan
+    const leftRecords = pageRecords.slice(0, MAX_PER_COLUMN);
+    const rightRecords = pageRecords.slice(MAX_PER_COLUMN);
 
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 10px;
-          table-layout: fixed;
-        }
-        thead { display: table-header-group; }
-        tr { page-break-inside: avoid; }
-        th {
-          background: #f0f0f0;
-          color: #333;
-          padding: 5px 8px;
-          text-align: left;
-          font-weight: bold;
-          font-size: 10px;
-          border: 1px solid #ccc;
-          white-space: nowrap;
-        }
-        th.no { text-align: center; width: 30px; }
-        th.waktu { text-align: center; }
-        td {
-          padding: 3px 8px;
-          border: 1px solid #ccc;
-          vertical-align: middle;
-          line-height: 1.3;
-        }
-        td.no { text-align: center; font-weight: bold; font-size: 9px; }
-        td.resi { 
-          font-family: 'Courier New', monospace; 
-          font-weight: bold;
-          font-size: 10px;
-          word-break: break-all;
-        }
-        td.waktu { text-align: center; font-size: 9px; white-space: nowrap; width: 60px; }
-        tr:nth-child(even) { background: #fafafa; }
+    const leftTable = buildTableHtml(leftRecords, pageStartIndex);
+    const rightTable = buildTableHtml(rightRecords, pageStartIndex + leftRecords.length);
 
-        .footer {
-          width: 100%;
-          margin-top: 24px;
-          padding-top: 12px;
-          border-top: 2px solid #333;
-          font-size: 12px;
-          page-break-inside: avoid;
-          break-inside: avoid;
-        }
-        .footer-content {
-          display: flex;
-          justify-content: space-between;
-        }
-        .footer-left { text-align: left; }
-        .footer-left .location {
-          font-weight: bold;
-          margin-bottom: 4px;
-        }
-        .footer-left .pic {
-          margin-top: 70px;
-          font-weight: bold;
-          font-size: 14px;
-        }
-        .footer-right { text-align: right; }
-        .footer-right .kurir {
-          font-weight: bold;
-          margin-bottom: 4px;
-        }
-        .footer-right .ttd {
-          margin-top: 70px;
-          font-weight: bold;
-          font-size: 14px;
-        }
-        @media print {
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1>BLP BEAUTY SURABAYA</h1>
-        <div class="header-info">
-          <div class="print-date">${tanggal}</div>
-          <div class="category-badge">${categoryName.toUpperCase()}</div>
-          <div class="total">Total: ${records.length} Resi</div>
-        </div>
-      </div>
-      
-      <div class="columns">
-        <div class="column">
-          ${leftTable}
-        </div>
-        <div class="column">
-          ${rightTable}
-        </div>
-      </div>
-
+    const footerHtml = isLastPage ? `
       <div class="footer">
         <div class="footer-content">
           <div class="footer-left">
@@ -243,6 +98,232 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           </div>
         </div>
       </div>
+    ` : '';
+
+    const pageNumberHtml = totalPages > 1 ? `
+      <div class="page-number">Halaman ${pageIdx + 1} dari ${totalPages}</div>
+    ` : '';
+
+    return `
+      <div class="print-page ${isLastPage ? 'last-page' : ''}">
+        <div class="header">
+          <h1>BLP BEAUTY SURABAYA</h1>
+          <div class="header-info">
+            <div class="print-date">${tanggal}</div>
+            <div class="category-badge">${categoryName.toUpperCase()}</div>
+            <div class="total">Total: ${records.length} Resi</div>
+          </div>
+        </div>
+
+        <div class="columns">
+          <div class="column">
+            ${leftTable}
+          </div>
+          <div class="column">
+            ${rightTable}
+          </div>
+        </div>
+
+        ${footerHtml}
+        ${pageNumberHtml}
+      </div>
+    `;
+  }).join('');
+
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Laporan Resi - ${categoryName}</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+      <style>
+        @page {
+          size: a4 portrait;
+          margin: 8mm 10mm 10mm 10mm;
+        }
+        * { 
+          box-sizing: border-box; 
+          margin: 0; 
+          padding: 0; 
+        }
+        body {
+          font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+          font-size: 11px;
+          background: white;
+          color: #333;
+          padding: 0;
+        }
+        .print-page {
+          width: 100%;
+          page-break-after: always;
+          break-after: page;
+          box-sizing: border-box;
+        }
+        .print-page.last-page {
+          page-break-after: auto;
+          break-after: auto;
+        }
+        .header {
+          text-align: center;
+          padding-bottom: 6px;
+          border-bottom: 2px solid #333;
+          margin-bottom: 6px;
+        }
+        .header h1 {
+          font-size: 20px;
+          font-weight: bold;
+          color: #333;
+          margin-bottom: 2px;
+          letter-spacing: 1px;
+        }
+        .header .header-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 4px;
+        }
+        .header .print-date {
+          font-size: 11px;
+          color: #555;
+          flex: 1;
+          text-align: left;
+        }
+        .header .category-badge {
+          display: inline-block;
+          background: ${categoryColor};
+          color: white;
+          padding: 2px 12px;
+          font-size: 11px;
+          font-weight: bold;
+          border-radius: 3px;
+        }
+        .header .total {
+          font-size: 12px;
+          color: #333;
+          font-weight: bold;
+          flex: 1;
+          text-align: right;
+        }
+
+        .columns {
+          display: flex;
+          gap: 10px;
+          width: 100%;
+        }
+        .column {
+          flex: 1;
+          min-width: 0;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 9.5px;
+          table-layout: fixed;
+        }
+        thead {
+          display: table-header-group;
+        }
+        tr {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+        th {
+          background: #f0f0f0;
+          color: #333;
+          padding: 3px 6px;
+          text-align: left;
+          font-weight: bold;
+          font-size: 9.5px;
+          border: 1px solid #bbb;
+          white-space: nowrap;
+        }
+        th.no { text-align: center; width: 28px; }
+        th.waktu { text-align: center; width: 95px; }
+        td {
+          padding: 2.6px 6px;
+          border: 1px solid #ccc;
+          vertical-align: middle;
+          line-height: 1.25;
+        }
+        td.no { text-align: center; font-weight: bold; font-size: 9px; }
+        td.resi { 
+          font-family: 'Courier New', monospace; 
+          font-weight: bold;
+          font-size: 9.5px;
+          word-break: break-all;
+        }
+        td.waktu { text-align: center; font-size: 8.5px; white-space: nowrap; }
+        tr:nth-child(even) { background: #fafafa; }
+
+        .footer {
+          width: 100%;
+          margin-top: 10px;
+          padding-top: 6px;
+          border-top: 2px solid #333;
+          font-size: 10.5px;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+        .footer-content {
+          display: flex;
+          justify-content: space-between;
+        }
+        .footer-left { text-align: left; }
+        .footer-left .location {
+          font-weight: bold;
+          margin-bottom: 2px;
+        }
+        .footer-left .pic {
+          margin-top: 35px;
+          font-weight: bold;
+          font-size: 11px;
+        }
+        .footer-right { text-align: right; }
+        .footer-right .kurir {
+          font-weight: bold;
+          margin-bottom: 2px;
+        }
+        .footer-right .ttd {
+          margin-top: 35px;
+          font-weight: bold;
+          font-size: 11px;
+        }
+
+        .page-number {
+          text-align: center;
+          font-size: 9px;
+          color: #777;
+          margin-top: 6px;
+        }
+
+        @media print {
+          body { 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact; 
+          }
+          .print-page {
+            page-break-after: always;
+            break-after: page;
+          }
+          .print-page.last-page {
+            page-break-after: auto;
+            break-after: auto;
+          }
+          tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .footer {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      ${pagesHtml}
     </body>
     </html>
   `;
@@ -251,8 +332,16 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
   if (printWindow) {
     printWindow.document.write(printContent);
     printWindow.document.close();
-    printWindow.onload = () => {
+    
+    let hasPrinted = false;
+    const triggerPrint = () => {
+      if (hasPrinted) return;
+      hasPrinted = true;
+      printWindow.focus();
       printWindow.print();
     };
+
+    printWindow.onload = triggerPrint;
+    setTimeout(triggerPrint, 300);
   }
 }
