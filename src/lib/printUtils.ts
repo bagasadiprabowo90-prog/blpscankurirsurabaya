@@ -14,7 +14,7 @@ function formatRecord(record: ResiRecord) {
 
 function buildTableHtml(records: ResiRecord[], startIndex: number): string {
   if (records.length === 0) {
-    return '<table><thead><tr><th class="no">NO</th><th class="resi">NOMOR RESI</th><th class="waktu">WAKTU</th></tr></thead><tbody><tr><td colspan="3" style="text-align: center; padding: 10px; color: #888;">-</td></tr></tbody></table>';
+    return '';
   }
   
   let rows = '';
@@ -55,8 +55,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
     minute: '2-digit',
   });
 
-  // Tepat 51 baris per kolom (maksimal 102 resi per lembar A4).
-  // Kolom kiri diisi sampai 51 baris (nomor 1 s/d 51) dengan tinggi yang memanjang proporsional sampai bawah kertas.
+  // Maksimal 51 baris per kolom (maksimal 102 resi per lembar A4).
   const MAX_PER_COLUMN = 51;
   const MAX_PER_PAGE = MAX_PER_COLUMN * 2; // 102 resi per halaman
   
@@ -77,12 +76,13 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
     const pageStartIndex = globalStartIndex;
     globalStartIndex += pageRecords.length;
 
-    // Kolom kiri diisi sampai maksimal 51 data, sisanya masuk ke kolom kanan
-    const leftRecords = pageRecords.slice(0, MAX_PER_COLUMN);
-    const rightRecords = pageRecords.slice(MAX_PER_COLUMN);
+    // Selalu bagi rata antara kolom kiri dan kolom kanan agar simetris
+    const half = Math.ceil(pageRecords.length / 2);
+    const leftRecords = pageRecords.slice(0, half);
+    const rightRecords = pageRecords.slice(half);
 
     const leftTable = buildTableHtml(leftRecords, pageStartIndex);
-    const rightTable = buildTableHtml(rightRecords, pageStartIndex + leftRecords.length);
+    const rightTable = buildTableHtml(rightRecords, pageStartIndex + half);
 
     const footerHtml = isLastPage ? `
       <div class="footer">
@@ -104,6 +104,21 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
       <div class="page-number">Halaman ${pageIdx + 1} dari ${totalPages}</div>
     ` : '';
 
+    const contentHtml = pageRecords.length === 0 ? `
+      <div style="text-align: center; padding: 40px; color: #888; font-size: 11px;">
+        Tidak ada data resi untuk dicetak
+      </div>
+    ` : `
+      <div class="columns">
+        <div class="column">
+          ${leftTable}
+        </div>
+        <div class="column">
+          ${rightTable}
+        </div>
+      </div>
+    `;
+
     return `
       <div class="print-page ${isLastPage ? 'last-page' : ''}">
         <div class="header">
@@ -115,14 +130,7 @@ export function printReport(records: ResiRecord[], category: CourierCategory) {
           </div>
         </div>
 
-        <div class="columns">
-          <div class="column">
-            ${leftTable}
-          </div>
-          <div class="column">
-            ${rightTable}
-          </div>
-        </div>
+        ${contentHtml}
 
         ${footerHtml}
         ${pageNumberHtml}
