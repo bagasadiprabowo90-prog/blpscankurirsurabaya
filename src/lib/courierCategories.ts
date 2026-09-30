@@ -62,10 +62,14 @@ export const COURIER_CATEGORIES: CategoryConfig[] = [
     name: 'Instan',
     shortName: 'ISD',
     prefixes: [],
-    patterns: [/^[A-Z0-9]+$/], // Bebas angka dan huruf, menjadi fallback sebelum spare
+    // Menerima: huruf+angka (contoh: 2608138JFUAC9P) ATAU full angka 14 digit.
+    // Catatan: full angka 14 digit JUGA cocok dengan Anteraja.
+    // Anteraja diprioritaskan saat auto-detect (urutan lebih awal di array).
+    // Jika user aktif di tab Instan → tab context override akan mengarahkan ke Instan.
+    patterns: [/^[A-Z0-9]+$/], // Bebas angka dan huruf (termasuk full digit)
     color: 'hsl(45, 93%, 47%)',
     bgClass: 'category-instan-sameday',
-    exactLength: 14,           // contoh: 2608138JFUAC9P
+    exactLength: 14,           // contoh: 2608138JFUAC9P atau 11004245411584
   },
   {
     id: 'spare',

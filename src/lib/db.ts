@@ -76,7 +76,12 @@ export async function addResi(resiNumber: string, forceCategory?: CourierCategor
   
   // Strict matching: if user is in a specific tab (forceCategory) and the scanned resi
   // strictly belongs to another tab, reject it.
-  if (forceCategory && detected && detected !== forceCategory) {
+  // PENGECUALIAN: Anteraja vs Instan sama-sama bisa berupa 14 digit angka murni.
+  // Jika user aktif di tab Instan dan auto-detect mengarah ke Anteraja,
+  // izinkan masuk sebagai Instan (tab context menang).
+  const isAntarajaInstanConflict =
+    forceCategory === 'instan-sameday' && detected === 'anteraja';
+  if (forceCategory && detected && detected !== forceCategory && !isAntarajaInstanConflict) {
     return { record: null, isDuplicate: false, isWrongCategory: true, detectedCategory: detected };
   }
   
@@ -151,7 +156,10 @@ export async function addBulkResi(resiNumbers: string[], forceCategory?: Courier
     const detected = tryDetectCategory(trimmed);
     
     // Strict matching: reject if belongs to another tab
-    if (forceCategory && detected && detected !== forceCategory) {
+    // PENGECUALIAN: Anteraja vs Instan sama-sama bisa berupa 14 digit angka murni.
+    const isAntarajaInstanConflict =
+      forceCategory === 'instan-sameday' && detected === 'anteraja';
+    if (forceCategory && detected && detected !== forceCategory && !isAntarajaInstanConflict) {
       rejected++;
       continue;
     }
