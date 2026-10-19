@@ -62,7 +62,7 @@ const Index = () => {
 
   // === Search state ===
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<ResiRecord[] | null>(null);
+  const [searchScope, setSearchScope] = useState<'current' | 'all'>('current');
 
   const { toast } = useToast();
 
@@ -150,22 +150,25 @@ const Index = () => {
     setWatchlistAlertResi(null);
   }, []);
 
-  // === Search handlers ===
-  const handleSearchResults = useCallback((results: ResiRecord[] | null) => {
-    setSearchResults(results);
-    if (results === null) {
-      setSearchQuery('');
-    }
-  }, []);
-
-  const handleSearchQueryChange = useCallback((query: string) => {
-    setSearchQuery(query);
-  }, []);
-
   // Filter records by category
   const filteredRecords = useMemo(() => {
     return records.filter(r => r.category === activeCategory);
   }, [records, activeCategory]);
+
+  // Filter records based on search query & scope
+  const displayedRecords = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return filteredRecords;
+    }
+    const normalized = searchQuery.trim().toUpperCase();
+    return records.filter((r) => {
+      const matches = r.resi.toUpperCase().includes(normalized);
+      if (searchScope === 'current') {
+        return matches && r.category === activeCategory;
+      }
+      return matches;
+    });
+  }, [records, filteredRecords, activeCategory, searchQuery, searchScope]);
 
   // Category counts
   const categoryCounts = useMemo(() => {
@@ -322,13 +325,25 @@ const Index = () => {
   // Handle delete single record
   const handleDelete = useCallback(async (id: string) => {
     try {
+      const targetRecord = records.find(r => r.id === id);
       await deleteResi(id);
       await reorderRowNumbers(); // Reorder after single delete
       await loadData(); // Refresh all data
+
+      toast({
+        title: "Resi Berhasil Dihapus",
+        description: targetRecord ? `Resi ${targetRecord.resi} telah dihapus` : "Resi telah dihapus",
+      });
+      soundManager.playSuccess();
     } catch (error) {
       console.error('Error deleting record:', error);
+      toast({
+        title: "Gagal Menghapus Resi",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan",
+        variant: "destructive",
+      });
     }
-  }, []);
+  }, [records, toast]);
 
   // Handle delete all duplicates
   const handleDeleteDuplicates = useCallback(async () => {
@@ -789,18 +804,51 @@ const Index = () => {
               duplicates={stats.duplicates}
               byCategory={categoryCounts}
             />
+
+            {/* Watchlist Panel (Paket Salah / Buronan) */}
+            <WatchlistPanel
+              watchlist={watchlist}
+              onAddToWatchlist={handleAddToWatchlist}
+              onRemoveFromWatchlist={handleRemoveFromWatchlist}
+              onClearWatchlist={handleClearWatchlist}
+              onToggleWatchlist={handleToggleWatchlist}
+              isActive={watchlistActive}
+            />
           </div>
 
-          {/* Right Column - Data Table */}
-          <div className="lg:col-span-8 flex flex-col min-h-0">
-            <ResiTable
-              records={filteredRecords}
-              onDelete={handleDelete}
-              showCategory={false}
+          {/* Right Column - Data Table & Search */}
+          <div className="lg:col-span-8 flex flex-col min-h-0 gap-2.5">
+            <SearchResi
+              records={records}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchScope={searchScope}
+              onScopeChange={setSearchScope}
+              activeCategory={activeCategory}
+              onJumpToCategory={setActiveCategory}
+              onDeleteSingle={handleDelete}
             />
+
+            <div className="flex-1 min-h-0">
+              <ResiTable
+                records={displayedRecords}
+                onDelete={handleDelete}
+                showCategory={searchScope === 'all' && searchQuery.trim().length > 0}
+                searchQuery={searchQuery}
+                onClearSearch={() => setSearchQuery('')}
+              />
+            </div>
           </div>
         </div>
       </main>
+
+      {/* Watchlist Alert Modal — Bunyi Siren & Flashing Overlay */}
+      {watchlistAlertResi && (
+        <WatchlistAlert
+          resi={watchlistAlertResi}
+          onDismiss={handleDismissWatchlistAlert}
+        />
+      )}
     </div>
   );
 };

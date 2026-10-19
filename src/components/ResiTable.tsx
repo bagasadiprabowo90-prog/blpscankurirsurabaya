@@ -3,7 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ResiRecord } from '@/lib/db';
 import { getCategoryConfig } from '@/lib/courierCategories';
 import { cn } from '@/lib/utils';
-import { Trash2, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Trash2, AlertTriangle, CheckCircle, Clock, Search, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HighlightedResi } from '@/components/SearchResi';
 
@@ -12,9 +12,16 @@ interface ResiTableProps {
   onDelete: (id: string) => void;
   showCategory?: boolean;
   searchQuery?: string;
+  onClearSearch?: () => void;
 }
 
-export function ResiTable({ records, onDelete, showCategory = true, searchQuery = '' }: ResiTableProps) {
+export function ResiTable({
+  records,
+  onDelete,
+  showCategory = true,
+  searchQuery = '',
+  onClearSearch,
+}: ResiTableProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const sortedRecords = useMemo(() => {
@@ -59,11 +66,35 @@ export function ResiTable({ records, onDelete, showCategory = true, searchQuery 
         className="overflow-y-auto flex-1 min-h-0 relative"
       >
         {records.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full px-6 text-center text-muted-foreground">
-            <Package className="w-16 h-16 mb-4 opacity-40" />
-            <p className="font-display uppercase tracking-wide text-2xl font-bold text-foreground">Belum ada data</p>
-            <p className="mt-1 font-mono text-sm">Mulai scan resi untuk menampilkan data</p>
-          </div>
+          searchQuery?.trim() ? (
+            <div className="flex flex-col items-center justify-center h-full px-6 text-center text-muted-foreground">
+              <Search className="w-14 h-14 mb-3 opacity-30 text-muted-foreground" />
+              <p className="font-display uppercase tracking-wide text-xl font-bold text-foreground">
+                Resi Tidak Ditemukan
+              </p>
+              <p className="mt-1 font-mono text-sm max-w-md">
+                Tidak ada resi yang cocok dengan pencarian{' '}
+                <span className="font-semibold text-foreground">"{searchQuery}"</span>
+              </p>
+              {onClearSearch && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onClearSearch}
+                  className="mt-4 gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Reset Pencarian
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full px-6 text-center text-muted-foreground">
+              <Package className="w-16 h-16 mb-4 opacity-40" />
+              <p className="font-display uppercase tracking-wide text-2xl font-bold text-foreground">Belum ada data</p>
+              <p className="mt-1 font-mono text-sm">Mulai scan resi untuk menampilkan data</p>
+            </div>
+          )
         ) : (
           <div
             style={{

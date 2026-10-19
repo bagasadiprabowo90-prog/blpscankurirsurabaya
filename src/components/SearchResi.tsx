@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, X, ArrowRight } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { Search, X, ArrowRight, Trash2, RotateCcw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -8,196 +8,281 @@ import { getCategoryConfig, COURIER_CATEGORIES, CourierCategory } from '@/lib/co
 
 interface SearchResiProps {
   records: ResiRecord[];
-  onSearchResults: (results: ResiRecord[] | null) => void;
-  onJumpToCategory?: (category: CourierCategory) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  searchScope: 'current' | 'all';
+  onScopeChange: (scope: 'current' | 'all') => void;
   activeCategory: CourierCategory;
-  searchAllCategories?: boolean;
+  onJumpToCategory?: (category: CourierCategory) => void;
+  onDeleteSingle?: (id: string) => void;
 }
 
 export function SearchResi({
   records,
-  onSearchResults,
-  onJumpToCategory,
+  searchQuery,
+  onSearchChange,
+  searchScope,
+  onScopeChange,
   activeCategory,
-  searchAllCategories = false,
+  onJumpToCategory,
+  onDeleteSingle,
 }: SearchResiProps) {
-  const [query, setQuery] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [searchScope, setSearchScope] = useState<'current' | 'all'>(searchAllCategories ? 'all' : 'current');
+  // Local input state allows typing before committing, or immediate live search
+  const [localInput, setLocalInput] = useState(searchQuery);
   const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = useCallback(
-    (searchQuery: string) => {
-      if (!searchQuery.trim()) {
-        onSearchResults(null);
-        return;
-      }
-
-      const normalizedQuery = searchQuery.trim().toUpperCase();
-      const filtered = records.filter((r) => {
-        const matchesQuery = r.resi.includes(normalizedQuery);
-        if (searchScope === 'current') {
-          return matchesQuery && r.category === activeCategory;
-        }
-        return matchesQuery;
-      });
-
-      onSearchResults(filtered);
-    },
-    [records, activeCategory, searchScope, onSearchResults]
-  );
-
+  // Sync with external searchQuery changes
   useEffect(() => {
-    handleSearch(query);
-  }, [query, handleSearch]);
+    setLocalInput(searchQuery);
+  }, [searchQuery]);
 
-  const handleClear = () => {
-    setQuery('');
-    onSearchResults(null);
+  // Execute search
+  const triggerSearch = useCallback((value: string) => {
+    onSearchChange(value.trim().toUpperCase());
+  }, [onSearchChange]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase();
+    setLocalInput(val);
+    // Live search as user types for fast responsive experience
+    onSearchChange(val.trim());
+  };
+
+  const handleSearchButtonClick = () => {
+    triggerSearch(localInput);
     inputRef.current?.focus();
   };
 
-  const handleExpand = () => {
-    setIsExpanded(true);
-    setTimeout(() => inputRef.current?.focus(), 100);
+  const handleClear = () => {
+    setLocalInput('');
+    onSearchChange('');
+    inputRef.current?.focus();
   };
 
-  const handleCollapse = () => {
-    if (!query) {
-      setIsExpanded(false);
-      onSearchResults(null);
-    }
-  };
-
-  // ESC to close
+  // Keyboard navigation & shortcut
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setQuery('');
-      setIsExpanded(false);
-      onSearchResults(null);
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      triggerSearch(localInput);
+    } else if (e.key === 'Escape') {
+      handleClear();
     }
-    // Prevent global scan capture from intercepting when search is focused
+    // Prevent global barcode scanner capture from intercepting typing
     e.stopPropagation();
   };
 
-  // Count results by category for the summary
-  const resultSummary = query.trim()
-    ? (() => {
-        const normalizedQuery = query.trim().toUpperCase();
-        const results: { category: CourierCategory; count: number; total: number }[] = [];
-        for (const cat of COURIER_CATEGORIES) {
-          const catRecords = records.filter((r) => r.category === cat.id);
-          const matches = catRecords.filter((r) => r.resi.includes(normalizedQuery));
-          if (matches.length > 0) {
-            results.push({ category: cat.id, count: matches.length, total: catRecords.length });
-          }
-        }
-        return results;
-      })()
-    : [];
+  // Global Ctrl+F / Ctrl+K shortcut to focus search
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'k')) {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
-  if (!isExpanded) {
-    return (
-      <button
-        onClick={handleExpand}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[hsl(var(--ink)/0.2)] bg-background/60 text-muted-foreground text-sm hover:bg-muted hover:text-foreground transition-colors"
-        title="Cari resi (Ctrl+F)"
-      >
-        <Search className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline text-xs font-medium">Cari</span>
-      </button>
-    );
-  }
+  // Filtered matches calculation
+  const activeQuery = searchQuery.trim().toUpperCase();
+  const matchedRecords = useMemo(() => {
+    if (!activeQuery) return [];
+    return records.filter((r) => {
+      const match = r.resi.toUpperCase().includes(activeQuery);
+      if (searchScope === 'current') {
+        return match && r.category === activeCategory;
+      }
+      return match;
+    });
+  }, [records, activeQuery, searchScope, activeCategory]);
+
+  // Matches across all categories for summary / jump
+  const crossCategoryMatches = useMemo(() => {
+    if (!activeQuery) return [];
+    const results: { category: CourierCategory; count: number; firstRecord: ResiRecord }[] = [];
+    for (const cat of COURIER_CATEGORIES) {
+      const catRecords = records.filter((r) => r.category === cat.id);
+      const matches = catRecords.filter((r) => r.resi.toUpperCase().includes(activeQuery));
+      if (matches.length > 0) {
+        results.push({ category: cat.id, count: matches.length, firstRecord: matches[0] });
+      }
+    }
+    return results;
+  }, [records, activeQuery]);
+
+  const totalMatchesAcrossAll = crossCategoryMatches.reduce((acc, curr) => acc + curr.count, 0);
+  const activeConfig = getCategoryConfig(activeCategory);
+
+  // Single exact match found (great for quick delete)
+  const singleMatch = matchedRecords.length === 1 ? matchedRecords[0] : null;
 
   return (
-    <div ref={containerRef} className="search-resi-container flex flex-col gap-1.5">
-      <div className="flex items-center gap-2">
+    <div className="bg-card border rounded-lg p-2.5 sm:p-3 shadow-xs space-y-2">
+      {/* Search Bar Input & Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             ref={inputRef}
             type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value.toUpperCase())}
+            value={localInput}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            onBlur={handleCollapse}
-            placeholder="Cari nomor resi..."
-            className="h-8 pl-8 pr-8 rounded-lg border-[hsl(var(--ink)/0.3)] bg-background font-mono text-sm tracking-wider uppercase focus:border-[hsl(var(--ink))] focus:ring-1 focus:ring-ring/30"
+            placeholder="Cari 1 resi untuk dihapus / dicek... (Ctrl+F)"
+            className="h-9 pl-8 pr-8 rounded-md font-mono text-sm uppercase tracking-wider bg-background border-input focus-visible:ring-1"
             autoComplete="off"
+            spellCheck={false}
           />
-          {query && (
+          {localInput && (
             <button
+              type="button"
               onClick={handleClear}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-sm hover:bg-muted"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title="Bersihkan pencarian (Esc)"
             >
-              <X className="w-3.5 h-3.5 text-muted-foreground" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
-        {/* Scope toggle */}
-        <div className="flex items-center rounded-lg border border-[hsl(var(--ink)/0.2)] overflow-hidden text-xs shrink-0">
-          <button
-            onClick={() => setSearchScope('current')}
-            className={cn(
-              'px-2 py-1.5 font-medium transition-colors',
-              searchScope === 'current'
-                ? 'bg-[hsl(var(--ink))] text-[hsl(var(--ink-foreground))]'
-                : 'bg-background text-muted-foreground hover:text-foreground'
-            )}
+        {/* Action Buttons: Tombol Cari & Scope */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Tombol CARI Utama */}
+          <Button
+            type="button"
+            onClick={handleSearchButtonClick}
+            size="sm"
+            className="h-9 px-3.5 gap-1.5 font-medium shadow-xs"
           >
-            Tab Ini
-          </button>
-          <button
-            onClick={() => setSearchScope('all')}
-            className={cn(
-              'px-2 py-1.5 font-medium transition-colors',
-              searchScope === 'all'
-                ? 'bg-[hsl(var(--ink))] text-[hsl(var(--ink-foreground))]'
-                : 'bg-background text-muted-foreground hover:text-foreground'
-            )}
-          >
-            Semua
-          </button>
+            <Search className="w-3.5 h-3.5" />
+            <span>Cari</span>
+          </Button>
+
+          {/* Scope Toggle: Tab Ini vs Semua Tab */}
+          <div className="inline-flex rounded-md border border-input p-0.5 bg-muted/40 text-xs shrink-0">
+            <button
+              type="button"
+              onClick={() => onScopeChange('current')}
+              className={cn(
+                'px-2.5 py-1 rounded-sm font-medium transition-all text-xs',
+                searchScope === 'current'
+                  ? 'bg-background text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              title={`Hanya cari di tab ${activeConfig.name}`}
+            >
+              Tab {activeConfig.shortName}
+            </button>
+            <button
+              type="button"
+              onClick={() => onScopeChange('all')}
+              className={cn(
+                'px-2.5 py-1 rounded-sm font-medium transition-all text-xs',
+                searchScope === 'all'
+                  ? 'bg-background text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              title="Cari di semua kategori kurir"
+            >
+              Semua Tab
+            </button>
+          </div>
+
+          {activeQuery && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+              className="h-9 px-2 text-xs text-muted-foreground hover:text-foreground"
+              title="Reset pencarian"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Result summary per category */}
-      {query.trim() && resultSummary.length > 0 && searchScope === 'all' && (
-        <div className="flex flex-wrap items-center gap-1.5 px-1 text-xs">
-          <span className="text-muted-foreground font-medium">Ditemukan di:</span>
-          {resultSummary.map(({ category, count }) => {
-            const config = getCategoryConfig(category);
-            const isCurrentTab = category === activeCategory;
-            return (
-              <button
-                key={category}
-                onClick={() => onJumpToCategory?.(category)}
-                className={cn(
-                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium transition-colors',
-                  isCurrentTab
-                    ? 'bg-[hsl(var(--ink))] text-[hsl(var(--ink-foreground))]'
-                    : 'bg-muted hover:bg-muted/80 text-foreground'
-                )}
-              >
-                <span
-                  className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ backgroundColor: config.color }}
-                />
-                {config.shortName}
-                <span className="tabular font-bold">{count}</span>
-                {!isCurrentTab && <ArrowRight className="w-3 h-3 opacity-50" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* Search Feedback & Results Banner */}
+      {activeQuery && (
+        <div className="pt-1 border-t text-xs flex flex-wrap items-center justify-between gap-2">
+          {/* Status info */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {matchedRecords.length > 0 ? (
+              <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                Ditemukan <strong className="font-mono text-primary font-bold">{matchedRecords.length}</strong> resi
+                {searchScope === 'current' ? ` di tab ${activeConfig.shortName}` : ' di semua tab'}:
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-destructive font-medium">
+                <AlertCircle className="w-3.5 h-3.5" />
+                Tidak ditemukan resi yang cocok dengan "{activeQuery}" di tab {activeConfig.shortName}.
+              </span>
+            )}
 
-      {query.trim() && resultSummary.length === 0 && (
-        <p className="text-xs text-muted-foreground px-1">
-          Tidak ditemukan resi yang cocok dengan "{query}"
-        </p>
+            {/* If 0 in current tab but found in other tabs */}
+            {searchScope === 'current' && matchedRecords.length === 0 && totalMatchesAcrossAll > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onScopeChange('all')}
+                className="h-6 px-2 text-[11px] gap-1 text-primary border-primary/40 hover:bg-primary/10"
+              >
+                Cari di Semua Tab ({totalMatchesAcrossAll} ditemukan)
+                <ArrowRight className="w-3 h-3" />
+              </Button>
+            )}
+
+            {/* Jump to specific tab badges if matches across categories */}
+            {searchScope === 'all' && crossCategoryMatches.length > 1 && (
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="text-muted-foreground text-[11px]">Kategori:</span>
+                {crossCategoryMatches.map(({ category, count }) => {
+                  const config = getCategoryConfig(category);
+                  const isCurrent = category === activeCategory;
+                  return (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => onJumpToCategory?.(category)}
+                      className={cn(
+                        'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors border',
+                        isCurrent
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-muted/60 hover:bg-muted text-foreground border-border'
+                      )}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: config.color }} />
+                      {config.shortName} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Quick 1-Click Delete Button when exactly 1 match found! */}
+          {singleMatch && onDeleteSingle && (
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="text-muted-foreground text-[11px] hidden sm:inline">
+                Mau hapus resi ini?
+              </span>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => onDeleteSingle(singleMatch.id)}
+                className="h-7 px-2.5 text-xs font-semibold gap-1.5 shadow-xs"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Hapus Resi Ini
+              </Button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -221,7 +306,9 @@ export function HighlightedResi({ resi, query }: { resi: string; query: string }
   return (
     <>
       {before}
-      <mark className="bg-warning/40 text-foreground rounded-sm px-0.5 font-bold">{match}</mark>
+      <mark className="bg-amber-300 dark:bg-amber-500/40 text-foreground rounded-xs px-0.5 font-bold">
+        {match}
+      </mark>
       {after}
     </>
   );
