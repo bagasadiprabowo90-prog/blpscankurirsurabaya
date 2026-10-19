@@ -4,6 +4,9 @@ import { CategoryTabs } from '@/components/CategoryTabs';
 import { ResiTable } from '@/components/ResiTable';
 import { StatsCard } from '@/components/StatsCard';
 import { ActionButtons } from '@/components/ActionButtons';
+import { SearchResi } from '@/components/SearchResi';
+import { WatchlistPanel, WatchlistItem, loadWatchlist, saveWatchlist, loadWatchlistActive, saveWatchlistActive, checkWatchlist } from '@/components/WatchlistPanel';
+import { WatchlistAlert } from '@/components/WatchlistAlert';
 import { 
   addResi, 
   addBulkResi, 
@@ -33,6 +36,7 @@ import { Button } from '@/components/ui/button';
 import { FlaskConical, UploadCloud } from 'lucide-react';
 
 
+
 const Index = () => {
   const [records, setRecords] = useState<ResiRecord[]>([]);
   const [activeCategory, setActiveCategory] = useState<CourierCategory>('shopee');
@@ -48,12 +52,35 @@ const Index = () => {
   // Sync lock: ref update synchronous (tidak tunggu React re-render seperti setState)
   // Ini mencegah double-sync jika user klik cepat 2x atau ada race condition
   const syncInProgressRef = useRef(false);
+
+  // === Watchlist state ===
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(() => loadWatchlist());
+  const [watchlistActive, setWatchlistActive] = useState(() => loadWatchlistActive());
+  const [watchlistAlertResi, setWatchlistAlertResi] = useState<string | null>(null);
+  const watchlistRef = useRef(watchlist);
+  const watchlistActiveRef = useRef(watchlistActive);
+
+  // === Search state ===
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<ResiRecord[] | null>(null);
+
   const { toast } = useToast();
 
   // Keep ref in sync for use in callbacks
   useEffect(() => {
     activeCategoryRef.current = activeCategory;
   }, [activeCategory]);
+
+  // Keep watchlist refs in sync for use in processScan callback
+  useEffect(() => {
+    watchlistRef.current = watchlist;
+    saveWatchlist(watchlist);
+  }, [watchlist]);
+
+  useEffect(() => {
+    watchlistActiveRef.current = watchlistActive;
+    saveWatchlistActive(watchlistActive);
+  }, [watchlistActive]);
 
   // Load data on mount
   useEffect(() => {
@@ -72,6 +99,68 @@ const Index = () => {
       console.error('Error loading data:', error);
     }
   };
+
+  // === Watchlist handlers ===
+  const handleAddToWatchlist = useCallback((resiList: string[]) => {
+    setWatchlist((prev) => {
+      const existingSet = new Set(prev.map((item) => item.resi));
+      const newItems: WatchlistItem[] = resiList
+        .filter((resi) => !existingSet.has(resi))
+        .map((resi) => ({
+          resi,
+          addedAt: Date.now(),
+          found: false,
+        }));
+      const updated = [...prev, ...newItems];
+      toast({
+        title: 'Watchlist Diperbarui',
+        description: `${newItems.length} resi ditambahkan ke watchlist (${resiList.length - newItems.length} sudah ada)`,
+      });
+      return updated;
+    });
+    // Auto-activate watchlist when items are added
+    if (!watchlistActive) {
+      setWatchlistActive(true);
+    }
+  }, [toast, watchlistActive]);
+
+  const handleRemoveFromWatchlist = useCallback((resi: string) => {
+    setWatchlist((prev) => prev.filter((item) => item.resi !== resi));
+  }, []);
+
+  const handleClearWatchlist = useCallback(() => {
+    setWatchlist([]);
+    toast({ title: 'Watchlist Dikosongkan', description: 'Semua resi di watchlist telah dihapus' });
+  }, [toast]);
+
+  const handleToggleWatchlist = useCallback(() => {
+    setWatchlistActive((prev) => {
+      const next = !prev;
+      toast({
+        title: next ? '🔴 Watchlist AKTIF' : 'Watchlist Dimatikan',
+        description: next
+          ? 'Setiap scan akan dicocokkan dengan watchlist'
+          : 'Watchlist tidak aktif, scan berjalan normal',
+      });
+      return next;
+    });
+  }, [toast]);
+
+  const handleDismissWatchlistAlert = useCallback(() => {
+    setWatchlistAlertResi(null);
+  }, []);
+
+  // === Search handlers ===
+  const handleSearchResults = useCallback((results: ResiRecord[] | null) => {
+    setSearchResults(results);
+    if (results === null) {
+      setSearchQuery('');
+    }
+  }, []);
+
+  const handleSearchQueryChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
 
   // Filter records by category
   const filteredRecords = useMemo(() => {
@@ -119,6 +208,32 @@ const Index = () => {
           [record.category]: (prev.byCategory[record.category] || 0) + 1,
         },
       }));
+      
+      // === WATCHLIST CHECK ===
+      // Cek apakah resi yang baru discan ada di watchlist
+      // Ini dilakukan SEBELUM suara duplikat agar siren menang (prioritas lebih tinggi)
+      const trimmedResi = resi.trim().toUpperCase();
+      if (watchlistActiveRef.current && watchlistRef.current.length > 0) {
+        const watchlistMatch = checkWatchlist(trimmedResi, watchlistRef.current);
+        if (watchlistMatch) {
+          // 🚨 MATCH! Bunyikan siren dan tampilkan alert besar
+          soundManager.playWatchlistSiren();
+          setWatchlistAlertResi(trimmedResi);
+          
+          // Mark as found di watchlist
+          setWatchlist(prev =>
+            prev.map(item =>
+              item.resi === trimmedResi
+                ? { ...item, found: true, foundAt: Date.now() }
+                : item
+            )
+          );
+          
+          setLastResult({ success: true, isDuplicate: true }); // trigger visual shake
+          setTimeout(() => setLastResult(null), 3000); // lebih lama agar user sempat lihat
+          return true; // tetap hitung sebagai scan berhasil
+        }
+      }
       
       setLastResult({ success: true, isDuplicate });
       

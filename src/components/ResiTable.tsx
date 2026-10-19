@@ -5,14 +5,16 @@ import { getCategoryConfig } from '@/lib/courierCategories';
 import { cn } from '@/lib/utils';
 import { Trash2, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { HighlightedResi } from '@/components/SearchResi';
 
 interface ResiTableProps {
   records: ResiRecord[];
   onDelete: (id: string) => void;
   showCategory?: boolean;
+  searchQuery?: string;
 }
 
-export function ResiTable({ records, onDelete, showCategory = true }: ResiTableProps) {
+export function ResiTable({ records, onDelete, showCategory = true, searchQuery = '' }: ResiTableProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const sortedRecords = useMemo(() => {
@@ -96,7 +98,7 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
                 <div className="flex items-center justify-between sm:hidden">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground font-medium">#{record.rowNumber}</span>
-                    <span className="font-mono text-sm font-semibold truncate max-w-[200px]">{record.resi}</span>
+                    <span className="font-mono text-sm font-semibold truncate max-w-[200px]"><HighlightedResi resi={record.resi} query={searchQuery} /></span>
                   </div>
                   <div className="flex items-center gap-2">
                     {record.isDuplicate ? (
@@ -130,7 +132,7 @@ export function ResiTable({ records, onDelete, showCategory = true }: ResiTableP
                   {record.rowNumber}
                 </div>
                 <div className="hidden sm:block col-span-4 font-mono text-sm font-semibold truncate">
-                  {record.resi}
+                  <HighlightedResi resi={record.resi} query={searchQuery} />
                 </div>
                 {showCategory && (
                   <div className="hidden sm:block col-span-2">
