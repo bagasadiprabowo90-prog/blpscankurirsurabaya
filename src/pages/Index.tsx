@@ -59,6 +59,9 @@ const Index = () => {
   const [watchlistAlertResi, setWatchlistAlertResi] = useState<string | null>(null);
   const watchlistRef = useRef(watchlist);
   const watchlistActiveRef = useRef(watchlistActive);
+  // Resi watchlist yang alert-nya sedang tampil. Selama tidak null → SEMUA scan dikunci.
+  // Pakai ref (update synchronous) agar scan beruntun dari antrean langsung ikut terblokir.
+  const watchlistAlertRef = useRef<string | null>(null);
 
   // === Search state ===
   const [searchQuery, setSearchQuery] = useState('');
@@ -147,6 +150,8 @@ const Index = () => {
   }, [toast]);
 
   const handleDismissWatchlistAlert = useCallback(() => {
+    watchlistAlertRef.current = null;
+    soundManager.stopSiren();
     setWatchlistAlertResi(null);
   }, []);
 
@@ -183,6 +188,31 @@ const Index = () => {
   }, [records]);
 
   const processScan = useCallback(async (resi: string): Promise<boolean> => {
+    // === WATCHLIST LOCK ===
+    // Selama alert watchlist tampil, semua scan diblokir (tidak disimpan).
+    // Satu-satunya scan yang diterima: resi watchlist yang SAMA → menutup alert (konfirmasi).
+    const lockedResi = watchlistAlertRef.current;
+    if (lockedResi) {
+      const scanned = resi.trim().toUpperCase();
+      if (scanned === lockedResi) {
+        // Konfirmasi: tutup alert, TIDAK disimpan lagi (sudah tersimpan di scan pertama)
+        handleDismissWatchlistAlert();
+        soundManager.playSuccess();
+        toast({
+          title: '✅ Watchlist Dikonfirmasi',
+          description: `${scanned} sudah dipisahkan. Scan bisa dilanjutkan.`,
+        });
+      } else {
+        soundManager.playReject();
+        toast({
+          title: '⛔ Scan Diblokir',
+          description: `Selesaikan dulu paket watchlist ${lockedResi}. Scan ulang resi tersebut atau klik KONFIRMASI.`,
+          variant: 'destructive',
+        });
+      }
+      return false;
+    }
+
     try {
       const result = await addResi(resi, activeCategoryRef.current);
       
@@ -220,6 +250,7 @@ const Index = () => {
         const watchlistMatch = checkWatchlist(trimmedResi, watchlistRef.current);
         if (watchlistMatch) {
           // 🚨 MATCH! Bunyikan siren dan tampilkan alert besar
+          watchlistAlertRef.current = trimmedResi; // 🔒 kunci semua scan berikutnya
           soundManager.playWatchlistSiren();
           setWatchlistAlertResi(trimmedResi);
           
@@ -261,7 +292,7 @@ const Index = () => {
       soundManager.playError();
       return false;
     }
-  }, [toast]);
+  }, [toast, handleDismissWatchlistAlert]);
 
   // Scan queue for handling rapid scanning
   const { addToQueue, queueLength, isProcessing: isQueueProcessing, processedCount, resetCount } = useScanQueue({
@@ -283,6 +314,16 @@ const Index = () => {
   }, [addToQueue]);
 
   const handleBulkUpload = useCallback(async (resiList: string[]) => {
+    // Bulk upload juga diblokir selama alert watchlist tampil
+    if (watchlistAlertRef.current) {
+      soundManager.playReject();
+      toast({
+        title: '⛔ Upload Diblokir',
+        description: `Selesaikan dulu paket watchlist ${watchlistAlertRef.current}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       // Pass activeCategory to force all bulk resi into current tab's category

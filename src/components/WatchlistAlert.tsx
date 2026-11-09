@@ -11,7 +11,8 @@ interface WatchlistAlertProps {
 /**
  * Full-screen overlay alert yang muncul saat resi yang discan cocok dengan watchlist.
  * Dirancang agar TIDAK MUNGKIN dilewatkan — merah besar, animasi pulse, blocking overlay.
- * User harus klik "KONFIRMASI" atau tekan Escape untuk menutup.
+ * User harus klik "KONFIRMASI" atau scan ulang resi yang sama untuk menutup
+ * (logika scan-lock ada di processScan, Index.tsx). Keyboard/Enter tidak menutup alert.
  */
 export function WatchlistAlert({ resi, onDismiss }: WatchlistAlertProps) {
   const [pulseCount, setPulseCount] = useState(0);
@@ -24,13 +25,18 @@ export function WatchlistAlert({ resi, onDismiss }: WatchlistAlertProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // ESC to dismiss
+  // Keyboard TIDAK bisa menutup alert.
+  // Barcode scanner selalu mengirim Enter di akhir scan — dulu Enter menutup alert,
+  // sehingga scan paket lain ikut "membatalkan" alarm. Sekarang Enter/Space hanya
+  // dicegah agar tidak meng-klik tombol yang sedang fokus. Event TIDAK di-stop,
+  // supaya scan tetap sampai ke Index.tsx dan dicek oleh watchlist lock:
+  // - scan resi watchlist yang sama → konfirmasi & tutup
+  // - scan resi lain → ditolak
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === 'Enter') {
+      const target = e.target as HTMLElement;
+      if ((e.key === 'Enter' || e.key === ' ') && target?.tagName === 'BUTTON') {
         e.preventDefault();
-        e.stopPropagation();
-        handleDismiss();
       }
     };
     window.addEventListener('keydown', handleKeyDown, true);
@@ -112,13 +118,12 @@ export function WatchlistAlert({ resi, onDismiss }: WatchlistAlertProps) {
           <Button
             onClick={handleDismiss}
             className="w-full h-14 text-lg font-display uppercase font-bold tracking-wider gap-3 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg"
-            autoFocus
           >
             <X className="w-5 h-5" />
             KONFIRMASI & TUTUP
           </Button>
-          <p className="text-center text-[10px] text-muted-foreground">
-            Tekan <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">ESC</kbd> atau <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">ENTER</kbd> untuk menutup
+          <p className="text-center text-xs text-muted-foreground">
+            Semua scan <b>diblokir</b>. Untuk menutup: <b>scan ulang resi ini</b> atau klik tombol di atas.
           </p>
         </div>
       </div>
