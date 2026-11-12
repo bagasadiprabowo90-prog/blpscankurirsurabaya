@@ -96,7 +96,11 @@ export async function addResi(resiNumber: string, forceCategory?: CourierCategor
     }
   }
   
-  const category = detected || forceCategory || 'spare';
+  // Jika terjadi konflik Anteraja vs Instan (14 digit angka saat di tab Instan),
+  // menangkan tab aktif (forceCategory = 'instan-sameday'), bukan hasil auto-detect ('anteraja').
+  const category = isAntarajaInstanConflict
+    ? forceCategory!
+    : (detected || forceCategory || 'spare');
 
   // Get current count for category
   const counterKey = `${category}|${dateKey}`;
@@ -174,7 +178,11 @@ export async function addBulkResi(resiNumbers: string[], forceCategory?: Courier
       }
     }
     
-    const category = detected || forceCategory || 'spare';
+    // Jika terjadi konflik Anteraja vs Instan (14 digit angka saat di tab Instan),
+  // menangkan tab aktif (forceCategory = 'instan-sameday'), bukan hasil auto-detect ('anteraja').
+  const category = isAntarajaInstanConflict
+    ? forceCategory!
+    : (detected || forceCategory || 'spare');
     const counterKey = `${category}|${dateKey}`;
     
     if (counters[counterKey] === undefined) {
